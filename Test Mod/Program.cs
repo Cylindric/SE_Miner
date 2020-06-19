@@ -16,225 +16,268 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRage;
 using VRageMath;
+using System.Diagnostics;
 
 namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-
-        /// <summary>
-        /// Finds every piston on the grid with custom data value of "extend_to_drill" or "retract_to_drill".
-        /// Finds every rotor on the grid with custom data value of "drill_rotor".
-        /// Finds every drill on the grid.
-        /// When drilling, will retract all "retract_to_drill" pistons, and extend all "extend_to_drill" pistons, at "drill_speed".
-        /// When retracting will retract all "extend_to_drill" pistons, then extend "retract_to_drill" pistons, at "drill_speed".
-        /// Stops drilling at "max_depth".
-        /// </summary>
-
-        List<IMyExtendedPistonBase> _pistons = new List<IMyExtendedPistonBase>();
-        List<IMyShipDrill> _drills = new List<IMyShipDrill>();
-        List<IMyMotorAdvancedStator> _rotors = new List<IMyMotorAdvancedStator>();
-
-        float _drill_speed = 1F;
-        float _retract_speed = 1F;
-        //float _max_depth = 1F;
-        float _main_rotor_speed = 1F;
-        float _main_rotor_max_lock = 0F;
-
-        String _state = "idle";
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="block"></param>
-        /// <returns></returns>
-        Dictionary<string, string> GetCustomData(IMyTerminalBlock block)
+        enum State
         {
-            var data = new Dictionary<string, string>();
-            var customData = block.CustomData;
-
-            if(string.IsNullOrEmpty(customData))
-            {
-                return data;
-            }
-            if (customData.Contains(";"))
-            {
-                foreach (string v in customData.Split(';'))
-                {
-                    if (v.Contains("="))
-                    {
-                        data.Add(v, "1");
-                    }
-                    else
-                    {
-                        data.Add(v.Substring(0, v.IndexOf("=")), v.Substring(v.IndexOf("=")));
-                    }
-                }
-            }
-            else
-            {
-                data.Add(customData, "1");
-            }
-            return data;
+            Idle,
+            Drilling,
+            Full,
+            Parking,
+            EStop
         }
+
+        MinerController _miner;
+        IMyTextPanel _debug;
+
+        State _current_state = State.Idle;
+        string _last_button_action = string.Empty;
+
         
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
 
-            // Find the main deployment piston(s)
-            var all_pistons = new List<IMyExtendedPistonBase>();
-            GridTerminalSystem.GetBlocksOfType(all_pistons);
-            foreach (var p in all_pistons)
+            _debug = (IMyTextPanel)GridTerminalSystem.GetBlockWithName("DEBUG");
+            if (_debug != null)
             {
-                Dictionary<string, string> blockData = GetCustomData(p);
-                if(blockData.ContainsKey("extend_to_drill") || blockData.ContainsKey("retract_to_drill"))
-                {
-                    Echo($"Piston {p.CustomName}. Max {p.MaxVelocity}. Vel {p.Velocity}");
-                    _pistons.Add(p);
-                }
+                _debug.ContentType = ContentType.TEXT_AND_IMAGE;
+                Debug("Miner Loaded\n", false);
             }
+
+            _miner = new MinerController(this);
+
+            // Find the main deployment piston(s)
+            _miner.FindAllPistons();
 
             // Find the main rotor(s)
-            var all_rotors = new List<IMyMotorAdvancedStator>();
-            GridTerminalSystem.GetBlocksOfType(all_rotors);
-            foreach (var r in all_rotors)
-            {
-                Dictionary<string, string> blockData = GetCustomData(r);
-                if (blockData.ContainsKey("drill_rotor"))
-                {
-                    _rotors.Add(r);
-                }
-            }
+            _miner.FindAllRotors();
 
             // Find the main drill(s)
-            GridTerminalSystem.GetBlocksOfType(_drills);
+            _miner.FindAllDrills();
 
             // Find out what state we should be in, if known
             var data = Storage;
             if(data.Length > 0)
             {
-                _state = data;
+                _current_state = (State) Enum.Parse(typeof(State), data, true);
             }
             else
             {
-                _state = "idle";
+                _current_state = State.Idle;
             }
-            Echo($"Current Mining state is {_state}.");
+            Debug($"Loaded state {_current_state} from storage.\n");
+
+        }
+
+        Queue<string> lines = new Queue<string>();
+        private void Debug(string msg, bool append=true)
+        {
+            Echo(msg);
+
+            if (_debug != null)
+            {
+                if (append == false)
+                {
+                    lines.Clear();
+                }
+                lines.Enqueue(msg);
+                if(lines.Count > 10)
+                {
+                    lines.Dequeue();
+                }
+
+                bool first = true;
+                foreach(var line in lines.ToArray())
+                {
+                    _debug.WriteText(msg, first==false);
+                    first = false;
+                }
+            }
         }
 
         public void Save()
         {
-            Storage = _state;
+            Storage = _current_state.ToString();
         }
 
         public void Main(string argument, UpdateType updateSource)
         {
+            // The main update loop. This gets triggered by the game every 100 ticks
             if(updateSource == UpdateType.Update100)
             {
-                switch (_state)
+                switch (_current_state)
                 {
-                    case "idle":
+                    case State.Idle:
+                        ProcessStateIdle();
                         break;
-                    case "drilling":
+                    case State.Drilling:
+                        ProcessStateDrilling();
                         break;
-                    case "retracting":
+                    case State.Parking:
+                        ProcessStateParking();
+                        break;
+                    case State.Full:
+                        ProcessStateFull();
+                        break;
+                    case State.EStop:
+                        ProcessStateStop();
                         break;
                 }
             }
 
+            // The manual intervention update. This gets triggered by someone pushing
+            // a button.
             if(updateSource == UpdateType.Trigger)
             {
-                Echo($"Got triggered! {argument}");
-                switch (argument)
-                {
-                    case "drill":
-                        StartDrilling();
-                        AdvanceDrillPistons();
-                        break;
-
-                    case "stop":
-                        StopDrilling();
-                        StopDrillPistons();
-                        break;
-
-                    case "retract":
-                        StopDrilling();
-                        RetractDrillPistons();
-                        break;
-                }
+                Debug($"Got triggered! {argument}\n");
+                _last_button_action = argument;
             }
         }
 
 
-        private void SetPistonVelocity(float piston_speed)
+        /// <summary>
+        /// State IDLE will transition:
+        ///   * to DRILL if a "drill" button was pressed.
+        ///   * to PARKING if the "park" button was pressed.
+        ///   * to ESTOP if an emergency button was pressed.
+        /// </summary>
+        private void ProcessStateIdle()
         {
-            Echo($"Setting all pistons to {piston_speed}.");
-
-            foreach (var p in _pistons)
+            if (_last_button_action == "stop" && _current_state != State.EStop)
             {
-                Dictionary<string, string> blockData = GetCustomData(p);
-
-                if (blockData.ContainsKey("extend_to_drill"))
-                {
-                    p.Velocity = piston_speed;
-                } else
-                {
-                    p.Velocity = piston_speed * -1;
-                }
-
-                p.Enabled = true;
+                Debug("Idle > EStop\n");
+                _current_state = State.EStop;
+                return;
             }
-        }
-        private void AdvanceDrillPistons()
-        {
-            var piston_speed = _drill_speed / _pistons.Count();
-            Echo($"Setting {_pistons.Count} pistons to {piston_speed} to reach {_drill_speed}.");
-            SetPistonVelocity(piston_speed);
-        }
 
-        private void StopDrillPistons()
-        {
-            var piston_speed = 0;
-            Echo($"Setting {_pistons.Count} pistons to {piston_speed} to reach {_drill_speed}.");
-            SetPistonVelocity(piston_speed);
-        }
-
-        private void RetractDrillPistons()
-        {
-            var piston_speed = (_retract_speed / _pistons.Count()) * -1;
-            Echo($"Setting {_pistons.Count} pistons to {piston_speed} to reach {_drill_speed}.");
-            SetPistonVelocity(piston_speed);
-        }
-
-        private void StartDrilling()
-        {
-            foreach (var d in _drills)
+            if (_last_button_action == "drill" && _current_state != State.Drilling)
             {
-                d.Enabled = true;
+                Debug("Idle > Drilling\n");
+                _current_state = State.Drilling;
+                return;
             }
-            foreach (var r in _rotors)
+
+            if (_last_button_action == "park" && _current_state != State.Parking)
             {
-                r.TargetVelocityRPM = _main_rotor_speed;
-                r.LowerLimitDeg = float.MinValue;
-                r.UpperLimitDeg = float.MaxValue;
-                r.Enabled = true;
+                Debug("Idle > Parking\n");
+                _current_state = State.Parking;
+                return;
             }
+
+            Debug("Idle\n");
         }
 
-        private void StopDrilling()
+
+        /// <summary>
+        /// State DRILLING will transition:
+        ///   * to FULL if the containers are all full.
+        ///   * to PARKING if the hole is fully dug out.
+        ///   * to PARKING if the "park" button was pressed.
+        ///   * to ESTOP if the "stop" button was pressed.
+        /// </summary>
+        private void ProcessStateDrilling()
         {
-            foreach (var d in _drills)
+            if (_last_button_action == "stop" && _current_state != State.EStop)
             {
-                d.Enabled = false;
+                Debug("Drilling > EStop\n");
+                _current_state = State.EStop;
+                return;
             }
-            foreach (var r in _rotors)
+
+            if (_last_button_action == "park" && _current_state != State.Parking)
             {
-                r.LowerLimitDeg = float.MinValue;
-                r.UpperLimitDeg = _main_rotor_max_lock;
-                r.Enabled = true;
+                Debug("Drilling > Parking\n");
+                _current_state = State.Parking;
+                return;
             }
+
+            if (_miner.StorageUsage() >= 0.999 && _current_state != State.Full)
+            {
+                Debug("Drilling > Full\n");
+                _current_state = State.Full;
+                return;
+            }
+
+            if(_miner.MaxDepthReached() && _current_state != State.Parking)
+            {
+                Debug("Drilling > Parking\n");
+                _current_state = State.Parking;
+                return;
+            }
+
+            Debug("Drilling\n");
+            _miner.StartDrilling();
+            _miner.AdvanceDrillPistons();
+        }
+
+        /// <summary>
+        /// State FULL will transition:
+        ///   * to DRILLING if the containers have capacity.
+        ///   * to ESTOP if an emergency button was pressed.
+        /// </summary>
+        private void ProcessStateFull()
+        {
+            if (_last_button_action == "stop" && _current_state != State.EStop)
+            {
+                Debug("Full > EStop\n");
+                _current_state = State.EStop;
+                return;
+            }
+
+            if (_miner.StorageUsage() <= 0.9 && _current_state != State.Drilling)
+            {
+                Debug("Full > Drilling\n");
+                _current_state = State.Drilling;
+                return;
+            }
+
+            // Just wait for the containers to be emptied by the refineries.
+            Debug("Full\n");
+        }
+
+        /// <summary>
+        /// State PARKING will transition:
+        ///   * to IDLE once the pistons and rotors have homed.
+        ///   * to ESTOP if an emergency button was pressed.
+        /// </summary>
+        private void ProcessStateParking()
+        {
+            if (_last_button_action == "stop" && _current_state != State.EStop)
+            {
+                Debug("Parking > EStop\n");
+                _current_state = State.EStop;
+                return;
+            }
+
+            if (_miner.MinDepthReached() && _miner.RotorHasHomed() && _current_state != State.Idle)
+            {
+                Debug("Parking > Idle\n");
+                _current_state = State.Idle;
+                return;
+            }
+
+            Debug($"Parking ({_miner.TotalPistonDistanceFromHome()})\n");
+        }
+
+        /// <summary>
+        /// State E-STOP does not transition.
+        /// </summary>
+        private void ProcessStateStop()
+        {
+            if (_last_button_action == "park" && _current_state != State.Parking)
+            {
+                Debug("EStop > Parking\n");
+                _current_state = State.Parking;
+                return;
+            }
+
+            _miner.EmergencyStop();
+            Debug("ESTOP\n");
         }
     }
 }

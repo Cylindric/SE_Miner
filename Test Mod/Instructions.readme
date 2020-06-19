@@ -1,5 +1,12 @@
 ﻿R e a d m e
 -----------
 
-In this file you can include any instructions or other comments you want to have injected onto the 
-top of your final script. You can safely delete this file if you do not want any such comments.
+Set CustomData on every piston that needs to extend to drill to contain the string "extend_to_drill".
+
+Set CustomData on every piston that needs to retract to drill to contain the string "retract_to_drill".
+
+Set CustomData on every rotor that needs to turn when drilling to contain the string drill_rotor.
+
+Every drill on the grid will be found and activated.
+
+Buttons that call the script can contain the parameter "drill", "park" or "stop".
