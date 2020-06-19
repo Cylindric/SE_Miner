@@ -75,16 +75,12 @@ namespace IngameScript
         }
 
         Queue<string> lines = new Queue<string>();
-        private void Debug(string msg, bool append=true)
+        public void Debug(string msg, bool append=true)
         {
             Echo(msg);
 
             if (_debug != null)
             {
-                if (append == false)
-                {
-                    lines.Clear();
-                }
                 lines.Enqueue(msg);
                 if(lines.Count > 10)
                 {
@@ -152,6 +148,7 @@ namespace IngameScript
             {
                 Debug("Idle > EStop\n");
                 _current_state = State.EStop;
+                _last_button_action = string.Empty;
                 return;
             }
 
@@ -159,6 +156,7 @@ namespace IngameScript
             {
                 Debug("Idle > Drilling\n");
                 _current_state = State.Drilling;
+                _last_button_action = string.Empty;
                 return;
             }
 
@@ -166,10 +164,11 @@ namespace IngameScript
             {
                 Debug("Idle > Parking\n");
                 _current_state = State.Parking;
+                _last_button_action = string.Empty;
                 return;
             }
 
-            Debug("Idle\n");
+            Debug($"Idle ({_miner.TotalPistonDistanceFromHome()})\n");
         }
 
 
@@ -186,6 +185,7 @@ namespace IngameScript
             {
                 Debug("Drilling > EStop\n");
                 _current_state = State.EStop;
+                _last_button_action = string.Empty;
                 return;
             }
 
@@ -193,6 +193,7 @@ namespace IngameScript
             {
                 Debug("Drilling > Parking\n");
                 _current_state = State.Parking;
+                _last_button_action = string.Empty;
                 return;
             }
 
@@ -210,7 +211,7 @@ namespace IngameScript
                 return;
             }
 
-            Debug("Drilling\n");
+            Debug($"Drilling... ({_miner.TotalPistonDistanceFromHome()})\n");
             _miner.StartDrilling();
             _miner.AdvanceDrillPistons();
         }
@@ -226,6 +227,7 @@ namespace IngameScript
             {
                 Debug("Full > EStop\n");
                 _current_state = State.EStop;
+                _last_button_action = string.Empty;
                 return;
             }
 
@@ -233,11 +235,12 @@ namespace IngameScript
             {
                 Debug("Full > Drilling\n");
                 _current_state = State.Drilling;
+                _last_button_action = string.Empty;
                 return;
             }
 
             // Just wait for the containers to be emptied by the refineries.
-            Debug("Full\n");
+            Debug($"Full ({_miner.TotalPistonDistanceFromHome()})\n");
         }
 
         /// <summary>
@@ -251,6 +254,7 @@ namespace IngameScript
             {
                 Debug("Parking > EStop\n");
                 _current_state = State.EStop;
+                _last_button_action = string.Empty;
                 return;
             }
 
@@ -261,7 +265,9 @@ namespace IngameScript
                 return;
             }
 
-            Debug($"Parking ({_miner.TotalPistonDistanceFromHome()})\n");
+            Debug($"Parking... ({_miner.TotalPistonDistanceFromHome()})\n");
+            _miner.RetractDrillPistons();
+            _miner.StopDrilling();
         }
 
         /// <summary>
@@ -273,11 +279,12 @@ namespace IngameScript
             {
                 Debug("EStop > Parking\n");
                 _current_state = State.Parking;
+                _last_button_action = string.Empty;
                 return;
             }
 
             _miner.EmergencyStop();
-            Debug("ESTOP\n");
+            Debug($"ESTOP ({_miner.TotalPistonDistanceFromHome()})\n");
         }
     }
 }

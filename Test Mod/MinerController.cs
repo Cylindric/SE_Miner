@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace IngameScript
 {
     class MinerController
     {
-        MyGridProgram _prog;
+        Program _prog;
         IMyGridTerminalSystem _grid;
         
         List<IMyExtendedPistonBase> _pistons = new List<IMyExtendedPistonBase>();
@@ -21,7 +22,7 @@ namespace IngameScript
         float _main_rotor_speed = 1F;
         float _main_rotor_max_lock = 0F;
 
-        public MinerController(MyGridProgram program)
+        public MinerController(Program program)
         {
             _prog = program;
             _grid = _prog.GridTerminalSystem;
@@ -70,11 +71,11 @@ namespace IngameScript
 
                 if (blockData.ContainsKey("extend_to_drill"))
                 {
-                    distance += p.CurrentPosition;
+                    distance += (p.CurrentPosition - p.LowestPosition);
                 }
                 else
                 {
-                    distance -= p.CurrentPosition;
+                    distance += (p.HighestPosition - p.CurrentPosition);
                 }
             }
             return distance;
@@ -90,16 +91,25 @@ namespace IngameScript
 
                 if (blockData.ContainsKey("extend_to_drill"))
                 {
-                    at_endstop = (p.CurrentPosition == p.MinLimit);
+                    at_endstop = (p.CurrentPosition <= p.MinLimit);
+                    if (at_endstop)
+                    {
+                        _prog.Debug($"Piston {p.CustomName} is at low endstop {p.MinLimit} ({p.CurrentPosition}).");
+                    }
                 }
                 else
                 {
-                    at_endstop = (p.CurrentPosition == p.MaxLimit);
+                    at_endstop = (p.CurrentPosition >= p.MaxLimit);
+                    if (at_endstop)
+                    {
+                        _prog.Debug($"Piston {p.CustomName} is at high endstop {p.MaxLimit} ({p.CurrentPosition}).");
+                    }
                 }
             }
 
             return at_endstop;
         }
+
         public bool MaxDepthReached()
         {
             bool at_endstop = false;
@@ -110,11 +120,19 @@ namespace IngameScript
 
                 if (blockData.ContainsKey("extend_to_drill"))
                 {
-                    at_endstop = (p.CurrentPosition == p.MaxLimit);
+                    at_endstop = (p.CurrentPosition >= p.MaxLimit);
+                    if (at_endstop)
+                    {
+                        _prog.Debug($"Piston {p.CustomName} is at high endstop {p.MaxLimit} ({p.CurrentPosition}).");
+                    }
                 }
                 else
                 {
-                    at_endstop = (p.CurrentPosition == p.MinLimit);
+                    at_endstop = (p.CurrentPosition <= p.MinLimit);
+                    if (at_endstop)
+                    {
+                        _prog.Debug($"Piston {p.CustomName} is at low endstop {p.MinLimit} ({p.CurrentPosition}).");
+                    }
                 }
             }
 
