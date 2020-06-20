@@ -9,6 +9,16 @@ namespace IngameScript
 {
     class Helpers
     {
+        public static double RadiansToDegrees(double radians)
+        {
+            return (180 / Math.PI) * radians;
+        }
+
+        public double DegreesToRadians(double degrees)
+        {
+            return (Math.PI / 180) * degrees;
+        }
+
         public static Dictionary<string, string> GetCustomData(IMyTerminalBlock block)
         {
             var data = new Dictionary<string, string>();

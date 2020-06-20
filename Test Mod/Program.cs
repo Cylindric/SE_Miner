@@ -17,6 +17,8 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 using System.Diagnostics;
+using VRage.Game.ObjectBuilders.Components;
+using EmptyKeys.UserInterface.Generated.StoreBlockView_Bindings;
 
 namespace IngameScript
 {
@@ -33,32 +35,64 @@ namespace IngameScript
 
         MinerController _miner;
         IMyTextPanel _debug;
+        List<IMyTextPanel> _oreDisplays = new List<IMyTextPanel>();
 
         State _current_state = State.Idle;
         string _last_button_action = string.Empty;
-
         
+        float _depth_at_last_tick = 0F;
+        float _depth_at_this_tick = 0F;
+        double _angle_at_last_tick = 0F;
+        double _angle_at_this_tick = 0F;
+        long _time_at_last_tick = 0;
+        long _time_at_this_tick = 0;
+       
+        IMyTextSurface _drawingSurface;
+        RectangleF _viewport;
+        Display _display;
+
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            _miner = new MinerController(this);
+
+            // Me is the programmable block which is running this script.
+            // Retrieve the Large Display, which is the first surface
+            _drawingSurface = Me.GetSurface(0);
+
+            // Calculate the viewport offset by centering the surface size onto the texture size
+            _viewport = new RectangleF(
+                (_drawingSurface.TextureSize - _drawingSurface.SurfaceSize) / 2f,
+                _drawingSurface.SurfaceSize
+            );
+            _display = new Display();
 
             _debug = (IMyTextPanel)GridTerminalSystem.GetBlockWithName("DEBUG");
             if (_debug != null)
             {
                 _debug.ContentType = ContentType.TEXT_AND_IMAGE;
-                Debug("Miner Loaded\n", false);
+                Debug("Miner Loaded\n");
             }
 
-            _miner = new MinerController(this);
+            // OreInventoryDisplay
+            var all_displays = new List<IMyTextPanel>();
+            GridTerminalSystem.GetBlocksOfType(all_displays);
+            _oreDisplays.Clear();
+            foreach(var d in all_displays)
+            {
+                Dictionary<string, string> blockData = Helpers.GetCustomData(d);
+                if (blockData.ContainsKey("OreInventoryDisplay"))
+                {
+                    _oreDisplays.Add(d);
+                    d.ContentType = ContentType.TEXT_AND_IMAGE;
+                }
+            }
 
-            // Find the main deployment piston(s)
+            // Find the main deployment components
             _miner.FindAllPistons();
-
-            // Find the main rotor(s)
             _miner.FindAllRotors();
-
-            // Find the main drill(s)
             _miner.FindAllDrills();
+            _miner.FindAllContainers();
 
             // Find out what state we should be in, if known
             var data = Storage;
@@ -75,22 +109,22 @@ namespace IngameScript
         }
 
         Queue<string> lines = new Queue<string>();
-        public void Debug(string msg, bool append=true)
+        public void Debug(string msg)
         {
             Echo(msg);
 
             if (_debug != null)
             {
                 lines.Enqueue(msg);
-                if(lines.Count > 10)
+                while(lines.Count > 15)
                 {
                     lines.Dequeue();
                 }
 
                 bool first = true;
-                foreach(var line in lines.ToArray())
+                foreach (var line in lines.ToArray())
                 {
-                    _debug.WriteText(msg, first==false);
+                    _debug.WriteText(line, first == false);
                     first = false;
                 }
             }
@@ -104,8 +138,12 @@ namespace IngameScript
         public void Main(string argument, UpdateType updateSource)
         {
             // The main update loop. This gets triggered by the game every 100 ticks
-            if(updateSource == UpdateType.Update100)
+            if (updateSource == UpdateType.Update100)
             {
+                _time_at_this_tick = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                _depth_at_this_tick = _miner.TotalPistonDistanceFromHome();
+                _angle_at_this_tick = _miner.TotalRotorAngle();
+
                 switch (_current_state)
                 {
                     case State.Idle:
@@ -124,17 +162,81 @@ namespace IngameScript
                         ProcessStateStop();
                         break;
                 }
+
+                UpdateOreDisplays();
+
+                _depth_at_last_tick = _depth_at_this_tick;
+                _angle_at_last_tick = _angle_at_this_tick;
+                _time_at_last_tick = _time_at_this_tick;
+
+                
             }
 
             // The manual intervention update. This gets triggered by someone pushing
             // a button.
-            if(updateSource == UpdateType.Trigger)
+            if (updateSource == UpdateType.Trigger)
             {
-                Debug($"Got triggered! {argument}\n");
+                Debug("Got triggered!\n");
                 _last_button_action = argument;
+            }
+
+            // Begin a new UI frame
+            var frame = _drawingSurface.DrawFrame();
+            DrawSprites(ref frame);
+            frame.Dispose();
+        }
+
+        public void UpdateOreDisplays()
+        {
+            var ore = _miner.GetOreCounts();
+            string ore_text = string.Empty;
+            foreach (var o in ore.OrderByDescending(x => x.Value).ThenBy(x => x.Key))
+            {
+                string displayValue = $"{o.Value:N0}kg";
+                if (o.Value < 1)
+                {
+                    displayValue = $"{o.Value:N2}kg";
+                }
+
+                ore_text += $"{displayValue,12} {o.Key}\n";
+            }
+
+            var ingots = _miner.GetIngotCounts();
+            string ingot_text = string.Empty;
+            foreach (var o in ingots.OrderByDescending(x => x.Value).ThenBy(x => x.Key))
+            {
+                string displayValue = $"{o.Value:N0}kg";
+                if (o.Value < 1)
+                {
+                    displayValue = $"{o.Value:N2}kg";
+                }
+
+                ingot_text += $"{displayValue,12} {o.Key}\n";
+            }
+
+            foreach (var d in _oreDisplays)
+            {
+                d.FontColor = new Color(0.27f, 0f, 0f);
+                d.WriteText(ore_text);
+                d.WriteText("\n\n", true);
+                d.FontColor = new Color(0f, 0.27f, 0f);
+                d.WriteText(ingot_text, true);
             }
         }
 
+        public void DrawSprites(ref MySpriteDrawFrame frame)
+        {
+            // Display a bar for the current storage capacity
+            var position = new Vector2(20, 20) + _viewport.Position;
+            var value = _miner.GetAvailableStorageSpace();
+            _display.DrawBar(ref frame, position, value);
+
+            // Display a bar for the current depth
+            position += new Vector2(0, 80);
+            value = _miner.TotalPistonDistanceFromHome() / _miner.MaxPistonDistanceFromHome();
+            _display.DrawBar(ref frame, position, value);
+
+        }
 
         /// <summary>
         /// State IDLE will transition:
@@ -168,7 +270,8 @@ namespace IngameScript
                 return;
             }
 
-            Debug($"Idle ({_miner.TotalPistonDistanceFromHome()})\n");
+            Debug($"Idle ({_miner.TotalPistonDistanceFromHome():F2}m)\n");
+            _miner.LockRotors();
         }
 
 
@@ -197,7 +300,7 @@ namespace IngameScript
                 return;
             }
 
-            if (_miner.StorageUsage() >= 0.999 && _current_state != State.Full)
+            if (_miner.GetAvailableStorageSpace() >= 0.999 && _current_state != State.Full)
             {
                 Debug("Drilling > Full\n");
                 _current_state = State.Full;
@@ -211,7 +314,33 @@ namespace IngameScript
                 return;
             }
 
-            Debug($"Drilling... ({_miner.TotalPistonDistanceFromHome()})\n");
+            float depthDelta = _depth_at_this_tick - _depth_at_last_tick;
+
+            // calculate the angle of motion since the last update
+            double angleDelta = 0;
+            if (_angle_at_last_tick < _angle_at_this_tick)
+            {
+                angleDelta = _angle_at_this_tick - _angle_at_last_tick;
+            } 
+            else
+            {
+                // overflow due to passing 0
+                angleDelta = _angle_at_this_tick + (360 - _angle_at_last_tick);
+            }
+
+            // If stalled, slow down?
+            bool stalled = false;
+            if(angleDelta < 5)
+            {
+                _miner.RotorStallDetected();
+                stalled = true;
+            } else
+            {
+                _miner.RotorStallCleared();
+            }
+
+            Debug($"Drilling... {_miner.TotalPistonDistanceFromHome():F2}m {angleDelta:F2}° {(stalled ? "(stalled)" : "")}\n");
+
             _miner.StartDrilling();
             _miner.AdvanceDrillPistons();
         }
@@ -231,7 +360,7 @@ namespace IngameScript
                 return;
             }
 
-            if (_miner.StorageUsage() <= 0.9 && _current_state != State.Drilling)
+            if (_miner.GetAvailableStorageSpace() <= 0.9 && _current_state != State.Drilling)
             {
                 Debug("Full > Drilling\n");
                 _current_state = State.Drilling;
@@ -240,7 +369,8 @@ namespace IngameScript
             }
 
             // Just wait for the containers to be emptied by the refineries.
-            Debug($"Full ({_miner.TotalPistonDistanceFromHome()})\n");
+            _miner.DisableDrills();
+            Debug($"Full ({_miner.GetAvailableStorageSpace():F2})\n");
         }
 
         /// <summary>
@@ -258,20 +388,31 @@ namespace IngameScript
                 return;
             }
 
-            if (_miner.MinDepthReached() && _miner.RotorHasHomed() && _current_state != State.Idle)
+            if (_miner.MinDepthReached() && _miner.RotorsAtEndstops() && _current_state != State.Idle)
             {
-                Debug("Parking > Idle\n");
+                if (_miner.MinDepthReached())
+                {
+                    Debug($"Parking > Idle (Min depth reached @ {_miner.TotalPistonDistanceFromHome()})\n");
+                }
+
+                if (_miner.RotorsAtEndstops())
+                {
+                    Debug("Parking > Idle (Rotors at endstops)\n");
+                }
                 _current_state = State.Idle;
                 return;
             }
 
-            Debug($"Parking... ({_miner.TotalPistonDistanceFromHome()})\n");
+            string message = $"Parking... {_miner.TotalPistonDistanceFromHome():F1}m {_miner.RotorAngleFromEndstop():F0}°";
+            Debug($"{message}\n");
             _miner.RetractDrillPistons();
-            _miner.StopDrilling();
+            _miner.DisableDrills();
+            _miner.DisengageRotors();
         }
 
         /// <summary>
-        /// State E-STOP does not transition.
+        /// State E-STOP will transition:
+        ///   * to PARKING if the park button was pressed.
         /// </summary>
         private void ProcessStateStop()
         {
@@ -284,7 +425,7 @@ namespace IngameScript
             }
 
             _miner.EmergencyStop();
-            Debug($"ESTOP ({_miner.TotalPistonDistanceFromHome()})\n");
+            Debug($"ESTOP ({_miner.TotalPistonDistanceFromHome():F2}m)\n");
         }
     }
 }
