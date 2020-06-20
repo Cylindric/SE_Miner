@@ -10,3 +10,8 @@ Set CustomData on every rotor that needs to turn when drilling to contain the st
 Every drill on the grid will be found and activated.
 
 Buttons that call the script can contain the parameter "drill", "park" or "stop".
+
+Debug Info
+----------
+Any screen that has custom data containing "[AutoMinerDebug]" 
+will have various debugging messages printed to it.

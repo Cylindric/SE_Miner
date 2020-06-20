@@ -9,14 +9,14 @@ namespace IngameScript
 {
     class Helpers
     {
-        public static double RadiansToDegrees(double radians)
+        public static float RadiansToDegrees(float radians)
         {
-            return (180 / Math.PI) * radians;
+            return (float)(180 / Math.PI) * radians;
         }
 
-        public double DegreesToRadians(double degrees)
+        public float DegreesToRadians(float degrees)
         {
-            return (Math.PI / 180) * degrees;
+            return (float)(Math.PI / 180) * degrees;
         }
 
         public static Dictionary<string, string> GetCustomData(IMyTerminalBlock block)

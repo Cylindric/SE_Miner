@@ -1,24 +1,10 @@
-﻿using Sandbox.Game.EntityComponents;
-using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
-using SpaceEngineers.Game.ModAPI.Ingame;
+﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
-using System.Text;
 using System;
-using VRage.Collections;
-using VRage.Game.Components;
 using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame.Utilities;
-using VRage.Game.ModAPI.Ingame;
-using VRage.Game.ObjectBuilders.Definitions;
-using VRage.Game;
-using VRage;
 using VRageMath;
-using System.Diagnostics;
-using VRage.Game.ObjectBuilders.Components;
-using EmptyKeys.UserInterface.Generated.StoreBlockView_Bindings;
 
 namespace IngameScript
 {
@@ -33,8 +19,9 @@ namespace IngameScript
             EStop
         }
 
+        MyIni _ini = new MyIni();
         MinerController _miner;
-        IMyTextPanel _debug;
+        List<IMyTextPanel> _debugDisplays = new List<IMyTextPanel>();
         List<IMyTextPanel> _oreDisplays = new List<IMyTextPanel>();
 
         State _current_state = State.Idle;
@@ -54,6 +41,11 @@ namespace IngameScript
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
+
+            MyIniParseResult result;
+            if (!_ini.TryParse(Me.CustomData, out result))
+                throw new Exception(result.ToString());
+
             _miner = new MinerController(this);
 
             // Me is the programmable block which is running this script.
@@ -67,25 +59,25 @@ namespace IngameScript
             );
             _display = new Display();
 
-            _debug = (IMyTextPanel)GridTerminalSystem.GetBlockWithName("DEBUG");
-            if (_debug != null)
+
+            // Find all the panels to use
+            var all_panels = new List<IMyTextPanel>();
+            GridTerminalSystem.GetBlocksOfType(all_panels);
+
+            // Find all the debug panels
+            _debugDisplays = all_panels.Where(p => p.CustomData.Contains("[AutoMinerDebug]")).ToList();
+            foreach(var d in _debugDisplays)
             {
-                _debug.ContentType = ContentType.TEXT_AND_IMAGE;
+                d.ContentType = ContentType.TEXT_AND_IMAGE;
                 Debug("Miner Loaded\n");
             }
 
-            // OreInventoryDisplay
-            var all_displays = new List<IMyTextPanel>();
-            GridTerminalSystem.GetBlocksOfType(all_displays);
+            // Find all the inventory panels
             _oreDisplays.Clear();
-            foreach(var d in all_displays)
+            _oreDisplays = all_panels.Where(p => p.CustomData.Contains("[AutoMinerInventory]")).ToList();
+            foreach (var d in _oreDisplays)
             {
-                Dictionary<string, string> blockData = Helpers.GetCustomData(d);
-                if (blockData.ContainsKey("OreInventoryDisplay"))
-                {
-                    _oreDisplays.Add(d);
-                    d.ContentType = ContentType.TEXT_AND_IMAGE;
-                }
+                d.ContentType = ContentType.TEXT_AND_IMAGE;
             }
 
             // Find the main deployment components
@@ -113,7 +105,7 @@ namespace IngameScript
         {
             Echo(msg);
 
-            if (_debug != null)
+            foreach(var d in _debugDisplays)
             {
                 lines.Enqueue(msg);
                 while(lines.Count > 15)
@@ -124,7 +116,7 @@ namespace IngameScript
                 bool first = true;
                 foreach (var line in lines.ToArray())
                 {
-                    _debug.WriteText(line, first == false);
+                    d.WriteText(line, first == false);
                     first = false;
                 }
             }
@@ -228,7 +220,7 @@ namespace IngameScript
         {
             // Display a bar for the current storage capacity
             var position = new Vector2(20, 20) + _viewport.Position;
-            var value = _miner.GetAvailableStorageSpace();
+            var value = _miner.GetUsedStoragePercentage();
             _display.DrawBar(ref frame, position, value);
 
             // Display a bar for the current depth
@@ -300,7 +292,7 @@ namespace IngameScript
                 return;
             }
 
-            if (_miner.GetAvailableStorageSpace() >= 0.999 && _current_state != State.Full)
+            if (_miner.GetUsedStoragePercentage() >= 0.999 && _current_state != State.Full)
             {
                 Debug("Drilling > Full\n");
                 _current_state = State.Full;
@@ -332,16 +324,15 @@ namespace IngameScript
             bool stalled = false;
             if(angleDelta < 5)
             {
-                _miner.RotorStallDetected();
+                _miner.SlowRetractGantry();
                 stalled = true;
             } else
             {
-                _miner.RotorStallCleared();
+                _miner.StartDrilling();
             }
 
             Debug($"Drilling... {_miner.TotalPistonDistanceFromHome():F2}m {angleDelta:F2}° {(stalled ? "(stalled)" : "")}\n");
 
-            _miner.StartDrilling();
             _miner.AdvanceDrillPistons();
         }
 
@@ -360,7 +351,7 @@ namespace IngameScript
                 return;
             }
 
-            if (_miner.GetAvailableStorageSpace() <= 0.9 && _current_state != State.Drilling)
+            if (_miner.GetUsedStoragePercentage() <= 0.9 && _current_state != State.Drilling)
             {
                 Debug("Full > Drilling\n");
                 _current_state = State.Drilling;
@@ -370,7 +361,7 @@ namespace IngameScript
 
             // Just wait for the containers to be emptied by the refineries.
             _miner.DisableDrills();
-            Debug($"Full ({_miner.GetAvailableStorageSpace():F2})\n");
+            Debug($"Full ({_miner.GetUsedStoragePercentage():F2})\n");
         }
 
         /// <summary>
@@ -407,7 +398,7 @@ namespace IngameScript
             Debug($"{message}\n");
             _miner.RetractDrillPistons();
             _miner.DisableDrills();
-            _miner.DisengageRotors();
+            _miner.StopDrillsAndLimitRotors();
         }
 
         /// <summary>
@@ -425,6 +416,7 @@ namespace IngameScript
             }
 
             _miner.EmergencyStop();
+            _current_state = State.Idle;
             Debug($"ESTOP ({_miner.TotalPistonDistanceFromHome():F2}m)\n");
         }
     }
