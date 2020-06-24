@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMiner", "AutoMiner.csproj", "{86C349F5-7005-465B-AFB4-3B13BFEA8098}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMiner", "AutoMiner\AutoMiner.csproj", "{86C349F5-7005-465B-AFB4-3B13BFEA8098}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2ABDF8F-684D-4D18-BBC2-F5BBE582FD24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryDisplay", "..\InventoryDisplay\InventoryDisplay.csproj", "{92007204-CD54-40F8-83AB-91B7EA7BFA9E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryDisplay", "InventoryDisplay\InventoryDisplay.csproj", "{92007204-CD54-40F8-83AB-91B7EA7BFA9E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
