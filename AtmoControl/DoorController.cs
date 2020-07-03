@@ -9,11 +9,13 @@ namespace IngameScript
         private readonly string _tag = "[ATMO]";
         private DateTime _lastBlockScan = DateTime.MinValue;
         private int _secondsBetweenScans = 5;
-        private List<Door> _doors = new List<Door>();
 
         public DoorController(Program program) : base(program)
         {
+            Doors = new List<Door>();
         }
+
+        internal List<Door> Doors { get; }
 
         public override void Update()
         {
@@ -30,7 +32,7 @@ namespace IngameScript
         {
             var all_doors = new List<IMyDoor>();
             _grid.GetBlocksOfType(all_doors);
-            _doors.Clear();
+            Doors.Clear();
             foreach (var d in all_doors)
             {
                 if (d.CustomName.Contains(_tag))
@@ -47,9 +49,9 @@ namespace IngameScript
                     b = name.LastIndexOf(")");
                     door.Room1 = name.Substring(a, b - a);
 
-                    _doors.Add(door);
+                    Doors.Add(door);
 
-                    _prog.Echo($"Found door {door.Room1} - {door.Room2}");
+                    //_prog.Echo($"Found door {door.Room1} - {door.Room2}");
                 }
             }
             _lastBlockScan = DateTime.Now;

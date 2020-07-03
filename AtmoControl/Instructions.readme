@@ -1,5 +1,34 @@
 ﻿R e a d m e
 -----------
 
-In this file you can include any instructions or other comments you want to have injected onto the 
-top of your final script. You can safely delete this file if you do not want any such comments.
+Does not work on planets, because I can't yet detect planetary atmosphere. Vents report them as unpressurised.
+
+Doors
+=====
+Every door in the system should have the tag [ATMO] in the name.
+Each should have two names in brackets defining the rooms on each side.
+The names of the rooms will be used to link all the components together,
+so every device referring to the same room, should have the same label in
+the brackets.
+
+e.g.
+Door 12 [ATMO] (Room1) (Room2)
+
+
+Vents
+=====
+Every vent in the system should have the tag [ATMO] in the name.
+Each should have one name in brackets defining the room it pressurises.
+
+e.g.
+Air Vent 5 [ATMO] (Room1)
+
+
+Door Displays
+=============
+Every display in the system should have the tag [ATMO] in the name.
+They should have one name in brackets defining the room it displays info for.
+
+e.g.
+Corner LCD 11 [ATMO] (Room1)
+

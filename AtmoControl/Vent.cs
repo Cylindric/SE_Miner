@@ -10,12 +10,13 @@ namespace IngameScript
     class Vent
     {
         private IMyAirVent _block;
-        private string _room;
 
         public Vent(IMyAirVent block)
         {
             _block = block;
         }
+
+        public string Room1 { get; set; }
 
         public float GetOxygenLevel
         {
@@ -38,19 +39,6 @@ namespace IngameScript
             get
             {
                 return !Safe;
-            }
-        }
-
-        public string Room
-        {
-            get
-            {
-                return _room;
-            }
-
-            set
-            {
-                _room = value;
             }
         }
     }

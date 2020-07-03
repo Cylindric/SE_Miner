@@ -39,6 +39,10 @@
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
     <Compile Include="BaseController.cs" />
+    <Compile Include="Display.cs" />
+    <Compile Include="DisplayController.cs" />
+    <Compile Include="Room.cs" />
+    <Compile Include="RoomController.cs" />
     <Compile Include="DoorController.cs" />
     <Compile Include="Vent.cs" />
     <Compile Include="Door.cs" />
