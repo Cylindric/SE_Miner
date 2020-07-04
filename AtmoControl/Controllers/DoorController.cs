@@ -6,10 +6,10 @@ namespace IngameScript
 {
     internal class DoorController : BaseController
     {
-        private readonly string _tag = "[ATMO]";
+        private const string TAG = "[ATMO]";
+        private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
-        private int _secondsBetweenScans = 5;
-
+        
         public DoorController(Program program) : base(program)
         {
             Doors = new List<Door>();
@@ -19,7 +19,7 @@ namespace IngameScript
 
         public new void Update()
         {
-            if (_lastBlockScan.AddSeconds(_secondsBetweenScans) < DateTime.Now)
+            if (_lastBlockScan.AddSeconds(SECONDS_BETWEEN_SCANS) < DateTime.Now)
             {
                 Discover();
             }
@@ -33,11 +33,11 @@ namespace IngameScript
             var all_doors = new List<IMyDoor>();
             _grid.GetBlocksOfType(all_doors);
             Doors.Clear();
-            foreach (var d in all_doors)
+            foreach (var door in all_doors)
             {
-                if (d.CustomName.Contains(_tag))
+                if (door.CustomName.Contains(TAG))
                 {
-                    Doors.Add(new Door(d));
+                    Doors.Add(new Door(door));
                 }
             }
             _lastBlockScan = DateTime.Now;

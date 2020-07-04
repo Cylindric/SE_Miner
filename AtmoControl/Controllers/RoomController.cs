@@ -7,9 +7,9 @@ namespace IngameScript
 {
     class RoomController : BaseController
     {
-        private DateTime _lastBlockScan = DateTime.MinValue;
-        private int _secondsBetweenScans = 5;
+        private const int SECONDS_BETWEEN_SCANS = 5;
 
+        private readonly DateTime _lastBlockScan = DateTime.MinValue;
         private readonly Dictionary<string, Room> _rooms;
         private readonly VentController _vents;
         private readonly DoorController _doors;
@@ -43,7 +43,7 @@ namespace IngameScript
                 _lights.Update();
                 _sensors.Update();
 
-                if ((DateTime.Now - _lastBlockScan).TotalSeconds > _secondsBetweenScans)
+                if ((DateTime.Now - _lastBlockScan).TotalSeconds > SECONDS_BETWEEN_SCANS)
                 {
                     ScanForNewRooms();
                     UpdateDisplays();
@@ -57,22 +57,50 @@ namespace IngameScript
 
         private void ScanForTriggeredDoors()
         {
-            foreach(var sensor in _sensors.Sensors)
+            // Doors can be triggered either by bad air, or by sensors
+            foreach (var door in _doors.Doors)
             {
-                foreach(var door in _doors.Doors.Where(d => d.Id == sensor.Link))
+                // If the door is not safe, ignore the sensors
+                var door_safe = (_vents.RoomIsSafe(door.Room1) && _vents.RoomIsSafe(door.Room2));
+                if (door_safe)
                 {
-                    // A sensor covers two rooms. 
-                    // If either room is dangerous, don't use the sensor data.
-                    var door_safe = (_vents.RoomIsSafe(door.Room1) && _vents.RoomIsSafe(door.Room2));
-                    if (door_safe)
+                    // Open and close based on any attached sensors
+                    foreach (var sensor in _sensors.Sensors.Where(s => s.Link == door.Id))
                     {
-                        if (door_safe && sensor.IsActive)
+                        if (sensor.IsActive)
                         {
+                            // Sensor is currently triggered, so open the door
                             door.Open();
                         }
                         else
                         {
+                            // Only auto-close the door if the mode requires it
+                            if (door.Mode == Door.DoorMode.AUTO_CLOSE)
+                            {
+                                door.Close();
+                            }
+                        }
+                    }
+                    door.WasSafe = true;
+                }
+                else
+                {
+                    // Door is not safe, so ignore sensors, but if it looks like it lost air, close it.
+                    // This attempts to close the door once, but if someone manually opens it, it stays
+                    // that way until they clear sensor range
+                    if (door.WasSafe && door_safe == false)
+                    {
+                        door.WasSafe = false;
+                        door.NeedsClosing = true;
+                    }
+
+                    // Door is not safe, but now needs closing, so check for sensors
+                    foreach (var sensor in _sensors.Sensors.Where(s => s.Link == door.Id))
+                    {
+                        if(sensor.IsActive == false)
+                        {
                             door.Close();
+                            door.NeedsClosing = false;
                         }
                     }
                 }
@@ -88,7 +116,6 @@ namespace IngameScript
             {
                 if (!_rooms.ContainsKey(v.Room1))
                 {
-                    //_prog.Echo($"Adding new room {v.Room1}");
                     _rooms.Add(v.Room1, new Room(v.Room1));
                 }
 

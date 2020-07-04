@@ -7,9 +7,9 @@ namespace IngameScript
 {
     internal class VentController : BaseController
     {
-        private readonly string _tag = "[ATMO]";
+        private const string TAG = "[ATMO]";
+        private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
-        private int _secondsBetweenScans = 5;
 
         public VentController(Program program) : base(program)
         {
@@ -28,7 +28,7 @@ namespace IngameScript
             Vents.Clear();
             foreach (var v in all_vents)
             {
-                if (v.CustomName.Contains(_tag))
+                if (v.CustomName.Contains(TAG))
                 {
                     // Don't include inactive vents, so if there are multiples
                     // and one is damage the system still works
@@ -51,7 +51,7 @@ namespace IngameScript
 
         public new void Update()
         {
-            if (_lastBlockScan.AddSeconds(_secondsBetweenScans) < DateTime.Now)
+            if (_lastBlockScan.AddSeconds(SECONDS_BETWEEN_SCANS) < DateTime.Now)
             {
                 Discover();
             }

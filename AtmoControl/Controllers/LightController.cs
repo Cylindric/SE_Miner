@@ -6,9 +6,9 @@ namespace IngameScript
 {
     internal class LightController : BaseController
     {
-        private readonly string _tag = "[ATMO]";
+        private const string TAG = "[ATMO]";
+        private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
-        private int _secondsBetweenScans = 5;
 
         public LightController(Program program) : base(program)
         {
@@ -19,7 +19,7 @@ namespace IngameScript
 
         public new void Update()
         {
-            if ((DateTime.Now - _lastBlockScan).TotalSeconds > _secondsBetweenScans)
+            if ((DateTime.Now - _lastBlockScan).TotalSeconds > SECONDS_BETWEEN_SCANS)
             {
                 Discover();
             }
@@ -30,14 +30,14 @@ namespace IngameScript
         /// </summary>
         public void Discover()
         {
-            var all = new List<IMyLightingBlock>();
-            _grid.GetBlocksOfType(all);
+            var all_lights = new List<IMyLightingBlock>();
+            _grid.GetBlocksOfType(all_lights);
             Lights.Clear();
-            foreach (var d in all)
+            foreach (var light in all_lights)
             {
-                if (d.CustomName.Contains(_tag))
+                if (light.CustomName.Contains(TAG))
                 {
-                    Lights.Add(new Light(d));
+                    Lights.Add(new Light(light));
                 }
             }
             _lastBlockScan = DateTime.Now;

@@ -6,9 +6,9 @@ namespace IngameScript
 {
     internal class DisplayController : BaseController
     {
-        private readonly string _tag = "[ATMO]";
+        private const string TAG = "[ATMO]";
+        private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
-        private int _secondsBetweenScans = 5;
 
         public DisplayController(Program program) : base(program)
         {
@@ -19,7 +19,7 @@ namespace IngameScript
 
         public new void Update()
         {
-            if ((DateTime.Now - _lastBlockScan).TotalSeconds > _secondsBetweenScans)
+            if ((DateTime.Now - _lastBlockScan).TotalSeconds > SECONDS_BETWEEN_SCANS)
             {
                 Discover();
             }
@@ -30,14 +30,14 @@ namespace IngameScript
         /// </summary>
         public void Discover()
         {
-            var all = new List<IMyTextPanel>();
-            _grid.GetBlocksOfType(all);
+            var all_displays = new List<IMyTextPanel>();
+            _grid.GetBlocksOfType(all_displays);
             Displays.Clear();
-            foreach (var d in all)
+            foreach (var display in all_displays)
             {
-                if (d.CustomName.Contains(_tag))
+                if (display.CustomName.Contains(TAG))
                 {
-                    Displays.Add(new Display(d));
+                    Displays.Add(new Display(display));
                 }
             }
             _lastBlockScan = DateTime.Now;

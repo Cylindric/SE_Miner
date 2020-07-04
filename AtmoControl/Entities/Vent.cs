@@ -1,9 +1,11 @@
 ﻿using SpaceEngineers.Game.ModAPI.Ingame;
 
+
 namespace IngameScript
 {
     class Vent : BaseEntity
     {
+        private const float SAFE_O2_THRESHOLD = 0.98f;
         private IMyAirVent _block;
 
         public Vent(IMyAirVent block) : base(block)
@@ -22,11 +24,15 @@ namespace IngameScript
             }
         }
 
+        /// <summary>
+        /// A vent is considered "Safe" if the O2 level is above 95%
+        /// and it is not set to depressurise.
+        /// </summary>
         public bool Safe
         {
             get
             {
-                return OxygenLevel > 0.95;
+                return _block.Depressurize == false && OxygenLevel > SAFE_O2_THRESHOLD;
             }
         }
 

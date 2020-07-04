@@ -11,11 +11,14 @@ Doors
 Each should have two names in the CustomData defining the rooms on each side.
 The names of the rooms will be used to link all the components together,
 so every device referring to the same room, should have the same labels
+If Mode is "AutoClose" (the default) the door will close when not triggered.
+If Mode is "Open" the door will stay open and only close in an emergency.
 
 [ATMO]
 ID = Hangar/Corridor
 Room1 = Hangar
 Room2 = Corridor A
+Mode = AutoClose
 
 
 Vents
@@ -56,3 +59,14 @@ Left = 3
 Right = 3
 Front = 3
 Back = 3
+
+Lights
+======
+Each should have one name in the CustomData defining the room it belongs to.
+
+Mode "On/Off" turns the light on if UNSAFE and off if SAFE.
+Mode "Red/White" turns the light red if UNSAFE and white if SAFE.
+
+[ATMO]
+Mode = On/Off
+Room = Hangar

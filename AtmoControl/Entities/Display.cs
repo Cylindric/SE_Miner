@@ -1,14 +1,12 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using VRageMath;
 
 namespace IngameScript
 {
     internal class Display : BaseEntity
     {
-        private IMyTextPanel _block;
+        private readonly IMyTextPanel _block;
         private Color _safe_bg = new Color(0, 40, 0);
         private Color _safe_fg = new Color(0, 140, 0);
         private Color _unsafe_bg = new Color(40, 0, 0);

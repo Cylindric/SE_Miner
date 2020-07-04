@@ -1,15 +1,14 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace IngameScript
 {
     internal class SensorController : BaseController
     {
-        private readonly string _tag = "[ATMO]";
+        private const string TAG = "[ATMO]";
+        private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
-        private int _secondsBetweenScans = 5;
 
         public SensorController(Program program) : base(program)
         {
@@ -23,14 +22,14 @@ namespace IngameScript
         /// </summary>
         public void Discover()
         {
-            var all_entities = new List<IMySensorBlock>();
-            _grid.GetBlocksOfType(all_entities);
+            var all_sensors = new List<IMySensorBlock>();
+            _grid.GetBlocksOfType(all_sensors);
             Sensors.Clear();
-            foreach (var v in all_entities)
+            foreach (var s in all_sensors)
             {
-                if (v.CustomName.Contains(_tag))
+                if (s.CustomName.Contains(TAG))
                 {
-                    Sensors.Add(new Sensor(v));
+                    Sensors.Add(new Sensor(s));
                 }
             }
             _lastBlockScan = DateTime.Now;
@@ -38,7 +37,7 @@ namespace IngameScript
 
         public new void Update()
         {
-            if (_lastBlockScan.AddSeconds(_secondsBetweenScans) < DateTime.Now)
+            if (_lastBlockScan.AddSeconds(SECONDS_BETWEEN_SCANS) < DateTime.Now)
             {
                 Discover();
             }
