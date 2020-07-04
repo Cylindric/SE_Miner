@@ -145,15 +145,5 @@ namespace IngameScript
                 }
             }
         }
-
-        public string Debug()
-        {
-            var output = "Rooms found:\n";
-            foreach(var room in _rooms)
-            {
-                output += $"{room.Key} ( {room.Value.Vents.Count} vents, {room.Value.Doors.Count} doors, {room.Value.Displays.Count} displays)\n";
-            }
-            return output;
-        }
     }
 }

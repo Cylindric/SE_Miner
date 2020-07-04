@@ -12,7 +12,6 @@ namespace IngameScript
 
             _rooms = new RoomController(this);
             _rooms.Update();
-            Echo(_rooms.Debug());
         }
 
         public void Save()
