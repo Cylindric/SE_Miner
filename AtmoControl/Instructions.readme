@@ -38,7 +38,8 @@ UnsafeMessage = DANGER!
 
 Sensors
 =======
-Position Above Right = when facing the door, one block right and up.
+Position Above Right = when facing the door, one block right and one up.
+Position Right = when facing the door, one block right.
 
 [ATMO]
 Link = Hangar/Corridor
