@@ -17,18 +17,18 @@ namespace IngameScript
 
         internal List<Display> Displays { get; }
 
-        public override void Update()
+        public new void Update()
         {
-            if (_lastBlockScan.AddSeconds(_secondsBetweenScans) < DateTime.Now)
+            if ((DateTime.Now - _lastBlockScan).TotalSeconds > _secondsBetweenScans)
             {
-                DiscoverDisplays();
+                Discover();
             }
         }
 
         /// <summary>
         /// Find all displays named with [ATMO] (room1) (room2)
         /// </summary>
-        public void DiscoverDisplays()
+        public void Discover()
         {
             var all = new List<IMyTextPanel>();
             _grid.GetBlocksOfType(all);
@@ -37,14 +37,7 @@ namespace IngameScript
             {
                 if (d.CustomName.Contains(_tag))
                 {
-                    Display display = new Display(d);
-
-                    string name = d.CustomName;
-                    int a = name.LastIndexOf("(") + 1;
-                    int b = name.LastIndexOf(")");
-                    display.Room1 = name.Substring(a, b - a);
-
-                    Displays.Add(display);
+                    Displays.Add(new Display(d));
                 }
             }
             _lastBlockScan = DateTime.Now;

@@ -1,19 +1,15 @@
 ﻿using SpaceEngineers.Game.ModAPI.Ingame;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IngameScript
 {
-    class Vent
+    class Vent : BaseEntity
     {
         private IMyAirVent _block;
 
-        public Vent(IMyAirVent block)
+        public Vent(IMyAirVent block) : base(block)
         {
             _block = block;
+            Room1 = GetIniString("Room");
         }
 
         public string Room1 { get; set; }

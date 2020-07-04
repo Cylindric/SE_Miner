@@ -6,29 +6,41 @@ Does not work on planets, because I can't yet detect planetary atmosphere. Vents
 Doors
 =====
 Every door in the system should have the tag [ATMO] in the name.
-Each should have two names in brackets defining the rooms on each side.
+Each should have two names in the CustomData defining the rooms on each side.
 The names of the rooms will be used to link all the components together,
-so every device referring to the same room, should have the same label in
-the brackets.
+so every device referring to the same room, should have the same labels
 
-e.g.
-Door 12 [ATMO] (Room1) (Room2)
+[ATMO]
+ID = Hangar/Corridor
+Room1 = Hangar
+Room2 = Corridor A
 
 
 Vents
 =====
 Every vent in the system should have the tag [ATMO] in the name.
-Each should have one name in brackets defining the room it pressurises.
+Each should have one name in the CustomData defining the room it pressurises.
 
-e.g.
-Air Vent 5 [ATMO] (Room1)
+[ATMO]
+Room = Hangar
 
 
 Door Displays
 =============
 Every display in the system should have the tag [ATMO] in the name.
-They should have one name in brackets defining the room it displays info for.
+They should have one name in the CustomData defining the room it displays info for.
 
-e.g.
-Corner LCD 11 [ATMO] (Room1)
+[ATMO]
+Room = Hangar
+SafeMessage = Safe
+UnsafeMessage = DANGER!
 
+
+Sensors
+=======
+Position Above Right = when facing the door, one block right and up.
+
+[ATMO]
+Link = Hangar/Corridor
+Position = Above Right
+DetectNeutral = true

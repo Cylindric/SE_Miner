@@ -1,5 +1,4 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System;
 
 namespace IngameScript
 {
@@ -14,6 +13,8 @@ namespace IngameScript
             _grid = _prog.GridTerminalSystem;
         }
 
-        public abstract void Update();
+        public void Update() { }
+
+        public void Update(UpdateType updateSource) { }
     }
 }

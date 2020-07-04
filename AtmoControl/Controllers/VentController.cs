@@ -21,7 +21,7 @@ namespace IngameScript
         /// <summary>
         /// Find all vents named with [ATMO] (room)
         /// </summary>
-        public void DiscoverVents()
+        public void Discover()
         {
             var all_vents = new List<IMyAirVent>();
             _grid.GetBlocksOfType(all_vents);
@@ -30,34 +30,35 @@ namespace IngameScript
             {
                 if (v.CustomName.Contains(_tag))
                 {
-                    int a = v.CustomName.LastIndexOf("(") + 1;
-                    int b = v.CustomName.LastIndexOf(")");
-                    string name = v.CustomName.Substring(a, b - a);
-                    if (Vents.Any(x => x.Room1 == name))
+                    var vent = new Vent(v);
+                    if (Vents.Any(x => x.Room1 == vent.Room1))
                     {
                         // duplicate vent.
                     }
                     else
                     {
-                        Vent vent = new Vent(v)
-                        {
-                            Room1 = name
-                        };
                         Vents.Add(vent);
                     }
-                    //_prog.Echo($"Found vent {name}");
                 }
             }
             _lastBlockScan = DateTime.Now;
         }
 
-        public override void Update()
+        public new void Update()
         {
             if (_lastBlockScan.AddSeconds(_secondsBetweenScans) < DateTime.Now)
             {
-                DiscoverVents();
+                Discover();
             }
         }
 
+        public bool RoomIsSafe(string roomName)
+        {
+            foreach(var v in Vents.Where(v => v.Room1 == roomName))
+            {
+                return v.Safe;
+            }
+            return false;
+        }
     }
 }

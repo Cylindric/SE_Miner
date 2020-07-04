@@ -38,14 +38,19 @@
   <Import Project="MDK/MDK.options.props" />
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
-    <Compile Include="BaseController.cs" />
-    <Compile Include="Display.cs" />
-    <Compile Include="DisplayController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\SensorController.cs" />
+    <Compile Include="Entities\BaseEntity.cs" />
+    <Compile Include="Entities\Sensor.cs" />
+    <Compile Include="Entities\Light.cs" />
+    <Compile Include="Entities\Display.cs" />
+    <Compile Include="Controllers\DisplayController.cs" />
+    <Compile Include="Controllers\LightController.cs" />
     <Compile Include="Room.cs" />
-    <Compile Include="RoomController.cs" />
-    <Compile Include="DoorController.cs" />
-    <Compile Include="Vent.cs" />
-    <Compile Include="Door.cs" />
+    <Compile Include="Controllers\RoomController.cs" />
+    <Compile Include="Controllers\DoorController.cs" />
+    <Compile Include="Entities\Vent.cs" />
+    <Compile Include="Entities\Door.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -57,7 +62,7 @@
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
-    <Compile Include="VentController.cs" />
+    <Compile Include="Controllers\VentController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

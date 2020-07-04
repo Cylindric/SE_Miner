@@ -4,10 +4,11 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        private RoomController _rooms;
+        private readonly RoomController _rooms;
+
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10 | UpdateFrequency.Update100;
 
             _rooms = new RoomController(this);
             _rooms.Update();
@@ -20,11 +21,7 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            // The main update loop. This gets triggered by the game every 100 ticks
-            if (updateSource == UpdateType.Update100)
-            {
-                _rooms.Update();
-            }
+            _rooms.Update(updateSource);
         }
 
     }
