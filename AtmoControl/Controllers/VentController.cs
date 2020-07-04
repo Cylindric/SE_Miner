@@ -30,14 +30,19 @@ namespace IngameScript
             {
                 if (v.CustomName.Contains(_tag))
                 {
-                    var vent = new Vent(v);
-                    if (Vents.Any(x => x.Room1 == vent.Room1))
+                    // Don't include inactive vents, so if there are multiples
+                    // and one is damage the system still works
+                    if (v.IsWorking)
                     {
-                        // duplicate vent.
-                    }
-                    else
-                    {
-                        Vents.Add(vent);
+                        var vent = new Vent(v);
+                        if (Vents.Any(x => x.Room1 == vent.Room1))
+                        {
+                            // duplicate vent.
+                        }
+                        else
+                        {
+                            Vents.Add(vent);
+                        }
                     }
                 }
             }

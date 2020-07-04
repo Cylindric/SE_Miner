@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace IngameScript
 {
@@ -17,5 +18,16 @@ namespace IngameScript
         public List<Door> Doors { get; internal set; }
         public List<Display> Displays { get; internal set; }
 
+        public bool IsSafe()
+        {
+            foreach (var vent in Vents)
+            {
+                if (!vent.Safe)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

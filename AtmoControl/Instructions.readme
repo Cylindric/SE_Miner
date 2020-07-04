@@ -3,9 +3,11 @@
 
 Does not work on planets, because I can't yet detect planetary atmosphere. Vents report them as unpressurised.
 
+Every device in the systme should have a tag [ATMO] in the name.
+Currently supported devices are Doors, Vents, Displays and Sensors.
+
 Doors
 =====
-Every door in the system should have the tag [ATMO] in the name.
 Each should have two names in the CustomData defining the rooms on each side.
 The names of the rooms will be used to link all the components together,
 so every device referring to the same room, should have the same labels
@@ -18,19 +20,18 @@ Room2 = Corridor A
 
 Vents
 =====
-Every vent in the system should have the tag [ATMO] in the name.
 Each should have one name in the CustomData defining the room it pressurises.
 
 [ATMO]
 Room = Hangar
 
-
-Door Displays
-=============
-Every display in the system should have the tag [ATMO] in the name.
-They should have one name in the CustomData defining the room it displays info for.
+Displays
+=========
+If Mode is "DoorSign" (the default), they should have one name in the CustomData defining the room it displays info for.
+If Mode is "RoomsDisplay", they will show the status of all rooms.
 
 [ATMO]
+Mode = DoorSign
 Room = Hangar
 SafeMessage = Safe
 UnsafeMessage = DANGER!
@@ -38,10 +39,20 @@ UnsafeMessage = DANGER!
 
 Sensors
 =======
-Position Above Right = when facing the door, one block right and one up.
-Position Right = when facing the door, one block right.
+Each should have a Link in the CustomData defining which door(s) it will trigger.
+All doors with the matching ID will be triggered.
+
+Position "Above Right" = when facing the door, one block right and one up.
+Position "Right" = when facing the door, one block right.
+Position "Custom" = whatever is provided by the Top, Bottom, Left, Right, Front and Back values
 
 [ATMO]
 Link = Hangar/Corridor
 Position = Above Right
 DetectNeutral = true
+Top = 3
+Bottom = 3
+Left = 3
+Right = 3
+Front = 3
+Back = 3

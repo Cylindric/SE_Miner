@@ -41,6 +41,19 @@ namespace IngameScript
             }
         }
 
+        protected float GetIniFloat(string key, float defaultValue = 0.0f)
+        {
+            double iniValue;
+            if (Ini.Get("Atmo", key).TryGetDouble(out iniValue))
+            {
+                return (float)iniValue;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
         protected MyIni Ini { get; }
     }
 }

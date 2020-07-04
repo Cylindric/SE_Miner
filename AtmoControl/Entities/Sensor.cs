@@ -1,6 +1,4 @@
-﻿using Sandbox.Common.ObjectBuilders.Definitions;
-using Sandbox.ModAPI.Ingame;
-using VRageMath;
+﻿using Sandbox.ModAPI.Ingame;
 
 namespace IngameScript
 {
@@ -41,6 +39,14 @@ namespace IngameScript
                     _block.BottomExtend = 4.0f;
                     _block.BackExtend = 4.0f;
                     _block.FrontExtend = 3.0f;
+                    break;
+                case "Custom":
+                    _block.LeftExtend = GetIniFloat("Left", 1.0f);
+                    _block.RightExtend = GetIniFloat("Right", 1.0f);
+                    _block.TopExtend = GetIniFloat("Top", 1.0f);
+                    _block.BottomExtend = GetIniFloat("Bottom", 1.0f);
+                    _block.BackExtend = GetIniFloat("Back", 1.0f);
+                    _block.FrontExtend = GetIniFloat("Front", 1.0f);
                     break;
             }
         }

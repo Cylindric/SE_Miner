@@ -1,4 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using VRageMath;
 
 namespace IngameScript
@@ -11,6 +14,12 @@ namespace IngameScript
         private Color _unsafe_bg = new Color(40, 0, 0);
         private Color _unsafe_fg = new Color(255, 255, 0);
 
+        public enum DisplayType
+        {
+            DOOR_SIGN,
+            ROOMS_SIGN
+        }
+
         public Display(IMyTextPanel block) : base(block)
         {
             _block = block;
@@ -18,14 +27,34 @@ namespace IngameScript
             SafeTitle = GetIniString("SafeMessage", "Safe");
             UnsafeTitle = GetIniString("UnsafeMessage", "DANGER!");
             Room = GetIniString("Room");
+            
+            switch(GetIniString("Mode", "DoorSign"))
+            {
+                case "RoomsDisplay":
+                    Mode = DisplayType.ROOMS_SIGN;
+                    break;
+                default:
+                    Mode = DisplayType.DOOR_SIGN;
+                    break;
+            }
 
-            _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.CENTER;
             _block.ContentType = VRage.Game.GUI.TextPanel.ContentType.TEXT_AND_IMAGE;
-            _block.FontSize = 10;
-            SetUnsafe();
+            switch (Mode)
+            {
+                case DisplayType.ROOMS_SIGN:
+                    _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
+                    break;
+                case DisplayType.DOOR_SIGN:
+                    _block.FontSize = 10;
+                    _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.CENTER;
+                    SetUnsafe();
+                    break;
+            }
         }
 
         public string Room { get; set; }
+
+        public DisplayType Mode { get; set; }
 
         public string SafeTitle { get; set; }
 
@@ -45,19 +74,59 @@ namespace IngameScript
 
         public void SetUnsafe()
         {
-            SetDisplay(UnsafeTitle, _unsafe_bg, _unsafe_fg);
+            SetDoorDisplay(UnsafeTitle, _unsafe_bg, _unsafe_fg);
         }
 
         public void SetSafe()
         {
-            SetDisplay(SafeTitle, _safe_bg, _safe_fg);
+            SetDoorDisplay(SafeTitle, _safe_bg, _safe_fg);
         }
 
-        private void SetDisplay(string str, Color bg, Color fg)
+        public void UpdateRoomsDisplay(Dictionary<string, Room> rooms)
+        {
+            int longestRoomName = 0;
+            int longestStatus = 6;
+
+            // loop once to get the layout info we need
+            foreach(var room in rooms)
+            {
+                if (room.Key.Length > longestRoomName)
+                    longestRoomName = room.Key.Length;
+            }
+
+            // loop again to format the output
+            string str = "";
+            bool allRoomSafe = true;
+            foreach (var room in rooms)
+            {
+                string safety;
+                if (room.Value.IsSafe())
+                {
+                    safety = "OK".PadLeft(longestStatus, ' ');
+                }
+                else
+                {
+                    allRoomSafe = false;
+                    safety = "Unsafe".PadLeft(longestStatus, ' ');
+                }
+                str += $"{room.Key.PadRight(longestRoomName, ' ')} {safety}\n";
+            }
+            if (allRoomSafe)
+            {
+                _block.BackgroundColor = _safe_bg;
+            }
+            else
+            {
+                _block.BackgroundColor = _unsafe_bg;
+            }
+            _block.WriteText(str);
+        }
+
+        private void SetDoorDisplay(string str, Color bg, Color fg)
         {
             _block.WriteText(str);
             _block.BackgroundColor = bg;
-            _block.ScriptForegroundColor = fg;
+            _block.FontColor = fg;
         }
     }
 }

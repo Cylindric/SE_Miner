@@ -115,12 +115,19 @@ namespace IngameScript
             // Create a new Room for every found Display
             foreach(var v in _displays.Displays)
             {
-                if (!_rooms.ContainsKey(v.Room))
+                if (string.IsNullOrEmpty(v.Room))
                 {
-                    _rooms.Add(v.Room, new Room(v.Room));
+                    // display without a room
+                }
+                else
+                {
+                    if (!_rooms.ContainsKey(v.Room))
+                    {
+                        _rooms.Add(v.Room, new Room(v.Room));
+                    }
+                    _rooms[v.Room].Displays.Add(v);
                 }
 
-                _rooms[v.Room].Displays.Add(v);
             }
         }
 
@@ -129,14 +136,22 @@ namespace IngameScript
         /// </summary>
         private void UpdateDisplays()
         {
-            foreach (var entity in _displays.Displays)
+            // Update all the signs that are full room displays
+            foreach (var entity in _displays.Displays.Where(d => d.Mode == Display.DisplayType.ROOMS_SIGN))
+            {
+                entity.UpdateRoomsDisplay(_rooms);
+            }
+
+            // Update all the signs that are door displays
+            foreach (var entity in _displays.Displays.Where(d => d.Mode == Display.DisplayType.DOOR_SIGN))
             {
                 foreach (var vent in _vents.Vents.Where(x => x.Room1.Equals(entity.Room)))
                 {
                     entity.UpdateSafety(vent.Safe);
                 }
             }
-            
+
+            // Update any lights that need turning on
             foreach (var entity in _lights.Lights)
             {
                 foreach (var vent in _vents.Vents.Where(x => x.Room1.Equals(entity.Room)))

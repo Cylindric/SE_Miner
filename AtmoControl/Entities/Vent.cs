@@ -14,7 +14,7 @@ namespace IngameScript
 
         public string Room1 { get; set; }
 
-        public float GetOxygenLevel
+        public float OxygenLevel
         {
             get
             {
@@ -26,7 +26,7 @@ namespace IngameScript
         {
             get
             {
-                return GetOxygenLevel > 0.95;
+                return OxygenLevel > 0.95;
             }
         }
 
