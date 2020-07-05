@@ -27,27 +27,39 @@ namespace IngameScript
                 case "Right":
                     _block.LeftExtend = 0.1f;
                     _block.RightExtend = 5.0f;
-                    _block.TopExtend = 0.1f;
                     _block.BottomExtend = 3.0f;
+                    _block.TopExtend = 0.1f;
                     _block.BackExtend = 4.0f;
                     _block.FrontExtend = 3.0f;
                     break;
                 case "Above Right":
                     _block.LeftExtend = 0.1f;
                     _block.RightExtend = 5.0f;
-                    _block.TopExtend = 0.1f;
                     _block.BottomExtend = 4.0f;
+                    _block.TopExtend = 0.1f;
                     _block.BackExtend = 4.0f;
+                    _block.FrontExtend = 3.0f;
+                    break;
+                case "Left Front":
+                    _block.LeftExtend = 5.0f;
+                    _block.RightExtend = 1.0f;
+                    _block.BottomExtend = 1.0f;
+                    _block.TopExtend = 1.0f;
+                    _block.BackExtend = 0.1f;
                     _block.FrontExtend = 3.0f;
                     break;
                 case "Custom":
                     _block.LeftExtend = GetIniFloat("Left", 1.0f);
                     _block.RightExtend = GetIniFloat("Right", 1.0f);
-                    _block.TopExtend = GetIniFloat("Top", 1.0f);
                     _block.BottomExtend = GetIniFloat("Bottom", 1.0f);
+                    _block.TopExtend = GetIniFloat("Top", 1.0f);
                     _block.BackExtend = GetIniFloat("Back", 1.0f);
                     _block.FrontExtend = GetIniFloat("Front", 1.0f);
                     break;
+                case "Manual":
+                    // Just leave it as it is.
+                    break;
+
             }
         }
 

@@ -6,6 +6,7 @@ namespace IngameScript
     class Vent : BaseEntity
     {
         private const float SAFE_O2_THRESHOLD = 0.98f;
+        private const string SAFE_ROOM = "atmosphere";
         private IMyAirVent _block;
 
         public Vent(IMyAirVent block) : base(block)
@@ -20,7 +21,7 @@ namespace IngameScript
         {
             get
             {
-                return _block.GetOxygenLevel();
+                return (Room1 == SAFE_ROOM ? 1.0f : _block.GetOxygenLevel());
             }
         }
 
@@ -32,7 +33,14 @@ namespace IngameScript
         {
             get
             {
-                return _block.Depressurize == false && OxygenLevel > SAFE_O2_THRESHOLD;
+                if (Room1 == SAFE_ROOM)
+                {
+                    return true;
+                }
+                else
+                {
+                    return _block.Depressurize == false && OxygenLevel > SAFE_O2_THRESHOLD;
+                }
             }
         }
 

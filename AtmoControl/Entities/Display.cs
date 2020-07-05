@@ -104,7 +104,10 @@ namespace IngameScript
                 }
                 else
                 {
-                    allRoomSafe = false;
+                    // Space is always unsafe, so don't make that mark the whole screen as bad
+                    if (room.Key.ToLower() != "space")
+                        allRoomSafe = false;
+
                     safety = "Unsafe".PadLeft(longestStatus, ' ');
                 }
                 str += $"{room.Key.PadRight(longestRoomName, ' ')} {safety}\n";

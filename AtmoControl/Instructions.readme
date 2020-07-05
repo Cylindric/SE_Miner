@@ -5,6 +5,9 @@ Does not work on planets, because I can't yet detect planetary atmosphere. Vents
 
 Every device in the systme should have a tag [ATMO] in the name.
 Currently supported devices are Doors, Vents, Displays and Sensors.
+Any devices connected to permanent vaccuum (in space) should be labelled "space".
+Any devices connected to permanent atmoshpere (breathable planets) should be labelled "atmosphere".
+
 
 Doors
 =====
@@ -47,7 +50,9 @@ All doors with the matching ID will be triggered.
 
 Position "Above Right" = when facing the door, one block right and one up.
 Position "Right" = when facing the door, one block right.
+Position "Left Front" = when facing the door, one block left and forward, perpendicular to the door
 Position "Custom" = whatever is provided by the Top, Bottom, Left, Right, Front and Back values
+Position "Manual" = just leave the sensor area where it is
 
 [ATMO]
 Link = Hangar/Corridor
