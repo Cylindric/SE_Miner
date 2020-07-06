@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using System.Linq;
 using VRageMath;
 
 namespace IngameScript
@@ -22,11 +23,12 @@ namespace IngameScript
         {
             _block = block;
 
-            SafeTitle = GetIniString("SafeMessage", "Safe");
             UnsafeTitle = GetIniString("UnsafeMessage", "DANGER!");
             Room = GetIniString("Room");
-            
-            switch(GetIniString("Mode", "DoorSign"))
+            FontSize = GetIniFloat("FontSize", 10f);
+            SafeTitle = GetIniString("SafeMessage", Room);
+
+            switch (GetIniString("Mode", "DoorSign"))
             {
                 case "RoomsDisplay":
                     Mode = DisplayType.ROOMS_SIGN;
@@ -36,6 +38,14 @@ namespace IngameScript
                     break;
             }
 
+            IgnoreRooms = new List<string>();
+            List<string> ignoreList = GetIniString("IgnoreRooms", "").Split(',').ToList();
+            foreach(var name in ignoreList)
+            {
+                IgnoreRooms.Add(name.Trim().ToLower());
+            }
+
+
             _block.ContentType = VRage.Game.GUI.TextPanel.ContentType.TEXT_AND_IMAGE;
             switch (Mode)
             {
@@ -43,7 +53,7 @@ namespace IngameScript
                     _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
                     break;
                 case DisplayType.DOOR_SIGN:
-                    _block.FontSize = 10;
+                    _block.FontSize = FontSize;
                     _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.CENTER;
                     SetUnsafe();
                     break;
@@ -57,6 +67,10 @@ namespace IngameScript
         public string SafeTitle { get; set; }
 
         public string UnsafeTitle { get; set; }
+
+        public List<string> IgnoreRooms { get; set; }
+
+        public float FontSize { get; set; }
 
         public void UpdateSafety(bool isSafe)
         {
@@ -86,7 +100,7 @@ namespace IngameScript
             int longestStatus = 6;
 
             // loop once to get the layout info we need
-            foreach(var room in rooms)
+            foreach(var room in rooms.Where(r => IgnoreRooms.All(p2 => p2 != r.Key.ToLower())))
             {
                 if (room.Key.Length > longestRoomName)
                     longestRoomName = room.Key.Length;
@@ -95,7 +109,7 @@ namespace IngameScript
             // loop again to format the output
             string str = "";
             bool allRoomSafe = true;
-            foreach (var room in rooms)
+            foreach (var room in rooms.Where(r => IgnoreRooms.All(p2 => p2 != r.Key.ToLower())).OrderBy(r => r.Key))
             {
                 string safety;
                 if (room.Value.IsSafe())

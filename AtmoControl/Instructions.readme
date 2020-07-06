@@ -34,13 +34,15 @@ Room = Hangar
 Displays
 =========
 If Mode is "DoorSign" (the default), they should have one name in the CustomData defining the room it displays info for.
-If Mode is "RoomsDisplay", they will show the status of all rooms.
+If Mode is "RoomsDisplay", they will show the status of all rooms. Any rooms in IgnoreRooms will not be shown.
 
 [ATMO]
 Mode = DoorSign
 Room = Hangar
 SafeMessage = Safe
 UnsafeMessage = DANGER!
+IgnoreRooms = Space, Closet
+FontSize = 10
 
 
 Sensors

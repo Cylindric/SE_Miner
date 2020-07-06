@@ -1,6 +1,8 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
 {
@@ -10,7 +12,7 @@ namespace IngameScript
         private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
 
-        public DisplayController(Program program) : base(program)
+        public DisplayController(Program program, IMyCubeGrid homeGrid) : base(program, homeGrid)
         {
             Displays = new List<Display>();
         }
@@ -33,7 +35,7 @@ namespace IngameScript
             var all_displays = new List<IMyTextPanel>();
             _grid.GetBlocksOfType(all_displays);
             Displays.Clear();
-            foreach (var display in all_displays)
+            foreach (var display in all_displays.Where(x => x.CubeGrid == _homeGrid))
             {
                 if (display.CustomName.Contains(TAG))
                 {

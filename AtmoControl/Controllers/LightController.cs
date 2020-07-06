@@ -1,6 +1,8 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
 {
@@ -10,7 +12,7 @@ namespace IngameScript
         private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
 
-        public LightController(Program program) : base(program)
+        public LightController(Program program, IMyCubeGrid homeGrid) : base(program, homeGrid)
         {
             Lights = new List<Light>();
         }
@@ -33,7 +35,7 @@ namespace IngameScript
             var all_lights = new List<IMyLightingBlock>();
             _grid.GetBlocksOfType(all_lights);
             Lights.Clear();
-            foreach (var light in all_lights)
+            foreach (var light in all_lights.Where(x => x.CubeGrid == _homeGrid))
             {
                 if (light.CustomName.Contains(TAG))
                 {

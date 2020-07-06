@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
 {
@@ -6,11 +7,13 @@ namespace IngameScript
     {
         protected readonly Program _prog;
         protected readonly IMyGridTerminalSystem _grid;
+        protected readonly IMyCubeGrid _homeGrid;
 
-        public BaseController(Program program)
+        public BaseController(Program program, IMyCubeGrid homeGrid)
         {
             _prog = program;
             _grid = _prog.GridTerminalSystem;
+            _homeGrid = homeGrid;
         }
 
         public void Update() { }

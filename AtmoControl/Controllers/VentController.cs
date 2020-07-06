@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
 {
@@ -11,7 +12,7 @@ namespace IngameScript
         private const int SECONDS_BETWEEN_SCANS = 5;
         private DateTime _lastBlockScan = DateTime.MinValue;
 
-        public VentController(Program program) : base(program)
+        public VentController(Program program, IMyCubeGrid homeGrid) : base(program, homeGrid)
         {
             Vents = new List<Vent>();
         }
@@ -26,7 +27,7 @@ namespace IngameScript
             var all_vents = new List<IMyAirVent>();
             _grid.GetBlocksOfType(all_vents);
             Vents.Clear();
-            foreach (var v in all_vents)
+            foreach (var v in all_vents.Where(x => x.CubeGrid == _homeGrid))
             {
                 if (v.CustomName.Contains(TAG))
                 {

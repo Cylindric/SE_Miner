@@ -24,10 +24,34 @@ namespace IngameScript
 
             switch (Position)
             {
+                case "Left":
+                    _block.LeftExtend = 4.0f;
+                    _block.RightExtend = 0.1f;
+                    _block.BottomExtend = 1.0f;
+                    _block.TopExtend = 1.0f;
+                    _block.BackExtend = 4.0f;
+                    _block.FrontExtend = 1.0f;
+                    break;
                 case "Right":
                     _block.LeftExtend = 0.1f;
                     _block.RightExtend = 5.0f;
                     _block.BottomExtend = 3.0f;
+                    _block.TopExtend = 0.1f;
+                    _block.BackExtend = 4.0f;
+                    _block.FrontExtend = 3.0f;
+                    break;
+                case "Above":
+                    _block.LeftExtend = 1f;
+                    _block.RightExtend = 1f;
+                    _block.BottomExtend = 4.0f;
+                    _block.TopExtend = 0.1f;
+                    _block.BackExtend = 4.0f;
+                    _block.FrontExtend = 3.0f;
+                    break;
+                case "Above Left":
+                    _block.LeftExtend = 5.0f;
+                    _block.RightExtend = 0.1f;
+                    _block.BottomExtend = 4.0f;
                     _block.TopExtend = 0.1f;
                     _block.BackExtend = 4.0f;
                     _block.FrontExtend = 3.0f;

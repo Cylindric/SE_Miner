@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript
 {
@@ -17,19 +18,18 @@ namespace IngameScript
         private readonly LightController _lights;
         private readonly SensorController _sensors;
 
-
-        public RoomController(Program program) : base(program)
+        public RoomController(Program program, IMyCubeGrid homeGrid) : base(program, homeGrid)
         {
             _rooms = new Dictionary<string, Room>();
-            _vents = new VentController(program);
+            _vents = new VentController(program, _homeGrid);
             _vents.Discover();
-            _doors = new DoorController(program);
+            _doors = new DoorController(program, _homeGrid);
             _doors.Discover();
-            _displays = new DisplayController(program);
+            _displays = new DisplayController(program, _homeGrid);
             _displays.Discover();
-            _lights = new LightController(program);
+            _lights = new LightController(program, _homeGrid);
             _lights.Discover();
-            _sensors = new SensorController(program);
+            _sensors = new SensorController(program, _homeGrid);
             _sensors.Discover();
         }
 
