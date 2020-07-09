@@ -1,4 +1,5 @@
-﻿using Sandbox.ModAPI.Ingame;
+﻿using IngameScript.Controllers;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,31 +18,44 @@ namespace IngameScript
         private readonly DisplayController _displays;
         private readonly LightController _lights;
         private readonly SensorController _sensors;
+        private readonly AirlockController _airlocks;
+        private readonly List<BaseController> _controllers = new List<BaseController>();
 
         public RoomController(Program program, IMyCubeGrid homeGrid) : base(program, homeGrid)
         {
             _rooms = new Dictionary<string, Room>();
             _vents = new VentController(program, _homeGrid);
             _vents.Discover();
+            _controllers.Add(_vents);
+
             _doors = new DoorController(program, _homeGrid);
             _doors.Discover();
+            _controllers.Add(_doors);
+
             _displays = new DisplayController(program, _homeGrid);
             _displays.Discover();
+            _controllers.Add(_displays);
+
             _lights = new LightController(program, _homeGrid);
             _lights.Discover();
+            _controllers.Add(_lights);
+
             _sensors = new SensorController(program, _homeGrid);
             _sensors.Discover();
+            _controllers.Add(_sensors);
+
+            _airlocks = new AirlockController(program, _homeGrid);
+            _controllers.Add(_airlocks);
         }
 
-        public new void Update(UpdateType updateSource)
+        public new void Update(string argument, UpdateType updateSource)
         {
             if ((updateSource & UpdateType.Update100) != 0)
             {
-                _vents.Update();
-                _doors.Update();
-                _displays.Update();
-                _lights.Update();
-                _sensors.Update();
+                foreach(var c in _controllers)
+                {
+                    c.Update();
+                }
 
                 if ((DateTime.Now - _lastBlockScan).TotalSeconds > SECONDS_BETWEEN_SCANS)
                 {
@@ -52,6 +66,15 @@ namespace IngameScript
             if ((updateSource & UpdateType.Update10) != 0)
             {
                 ScanForTriggeredDoors();
+            }
+
+            // Call any triggered controllers
+            if ((updateSource & UpdateType.Trigger) != 0)
+            {
+                foreach (var c in _controllers)
+                {
+                    c.Update(argument, updateSource);
+                }
             }
         }
 
@@ -154,8 +177,10 @@ namespace IngameScript
                     }
                     _rooms[v.Room].Displays.Add(v);
                 }
-
             }
+
+            // Create airlocks for any rooms found tagged as such
+            _airlocks.Discover(_vents.Vents, _doors.Doors);
         }
 
         /// <summary>

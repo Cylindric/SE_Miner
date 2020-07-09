@@ -16,6 +16,7 @@ The names of the rooms will be used to link all the components together,
 so every device referring to the same room, should have the same labels
 If Mode is "AutoClose" (the default) the door will close when not triggered.
 If Mode is "Open" the door will stay open and only close in an emergency.
+If the door is part of an airlock, mode should be either "Airlock Inner" or "Airlock Outer".
 
 [ATMO]
 ID = Hangar/Corridor
@@ -27,9 +28,11 @@ Mode = AutoClose
 Vents
 =====
 Each should have one name in the CustomData defining the room it pressurises.
+If Mode is "Airlock" then the room, it's doors, button and vents will be treated as an Airlock.
 
 [ATMO]
 Room = Hangar
+Mode = Normal
 
 Displays
 =========

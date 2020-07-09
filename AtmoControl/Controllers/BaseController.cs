@@ -19,5 +19,7 @@ namespace IngameScript
         public void Update() { }
 
         public void Update(UpdateType updateSource) { }
+
+        public void Trigger(string argument) { }
     }
 }

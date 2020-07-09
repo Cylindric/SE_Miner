@@ -20,7 +20,7 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            _rooms.Update(updateSource);
+            _rooms.Update(argument, updateSource);
         }
 
     }

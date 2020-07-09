@@ -9,7 +9,8 @@ namespace IngameScript
         public enum DoorMode
         {
             AUTO_CLOSE,
-            NORMALLY_OPEN
+            NORMALLY_OPEN,
+            AIRLOCK
         }
 
         public Door(IMyDoor block) : base(block)
@@ -18,14 +19,18 @@ namespace IngameScript
             Room1 = GetIniString("Room1");
             Room2 = GetIniString("Room2");
             Id = GetIniString("Id");
+            Airlock = GetIniString("Airlock");
             NeedsClosing = true;
             WasSafe = true;
 
-            switch (GetIniString("Mode", "AutoClose"))
+            switch (GetIniString("Mode", "AutoClose").ToLower())
             {
-                case "Open":
+                case "open":
                     Mode = DoorMode.NORMALLY_OPEN;
                     NeedsClosing = false;
+                    break;
+                case "airlock":
+                    Mode = DoorMode.AIRLOCK;
                     break;
                 default:
                     Mode = DoorMode.AUTO_CLOSE;
@@ -34,13 +39,10 @@ namespace IngameScript
         }
 
         public string Id { get; set; }
-
+        public string Airlock { get; set; }
         public string Room1 { get; set; }
-
         public string Room2 { get; set; }
-
         public DoorMode Mode { get; set; }
-
         public bool NeedsClosing { get; set; }
         public bool WasSafe { get; set; }
 

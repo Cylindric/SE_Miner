@@ -9,13 +9,30 @@ namespace IngameScript
         private const string SAFE_ROOM = "atmosphere";
         private IMyAirVent _block;
 
+        public enum VentMode
+        {
+            NORMAL,
+            AIRLOCK
+        }
+
         public Vent(IMyAirVent block) : base(block)
         {
             _block = block;
             Room1 = GetIniString("Room");
+
+            switch (GetIniString("Mode", "Normal").ToLower())
+            {
+                case "airlock":
+                    Mode = VentMode.AIRLOCK;
+                    break;
+                default:
+                    Mode = VentMode.NORMAL;
+                    break;
+            }
         }
 
         public string Room1 { get; set; }
+        public VentMode Mode { get; set; }
 
         public float OxygenLevel
         {
