@@ -10,7 +10,8 @@ namespace IngameScript
         {
             AUTO_CLOSE,
             NORMALLY_OPEN,
-            AIRLOCK
+            AIRLOCK_INSIDE,
+            AIRLOCK_OUTSIDE
         }
 
         public Door(IMyDoor block) : base(block)
@@ -29,8 +30,11 @@ namespace IngameScript
                     Mode = DoorMode.NORMALLY_OPEN;
                     NeedsClosing = false;
                     break;
-                case "airlock":
-                    Mode = DoorMode.AIRLOCK;
+                case "airlock inside":
+                    Mode = DoorMode.AIRLOCK_INSIDE;
+                    break;
+                case "airlock outside":
+                    Mode = DoorMode.AIRLOCK_OUTSIDE;
                     break;
                 default:
                     Mode = DoorMode.AUTO_CLOSE;

@@ -20,6 +20,14 @@ namespace IngameScript.Controllers
             Airlocks = new List<Airlock>();
         }
 
+        public new void Trigger(string argument)
+        {
+            if(argument.ToLower() == "cycle airlock")
+            {
+
+            }
+        }
+
         public void Discover(List<Vent> vents, List<Door> doors)
         {
             // Vents are the main indicator that a room is an airlock
