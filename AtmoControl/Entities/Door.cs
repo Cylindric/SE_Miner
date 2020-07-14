@@ -15,8 +15,8 @@ namespace IngameScript
         public Door(IMyDoor block) : base(block)
         {
             _block = block;
-            Room1 = GetIniString("Room1");
-            Room2 = GetIniString("Room2");
+            //Room1 = GetIniString("Room1");
+            //Room2 = GetIniString("Room2");
             Id = GetIniString("Id");
             NeedsClosing = true;
             WasSafe = true;

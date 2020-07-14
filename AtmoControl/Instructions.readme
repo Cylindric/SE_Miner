@@ -9,6 +9,14 @@ Any devices connected to permanent vaccuum (in space) should be labelled "space"
 Any devices connected to permanent atmoshpere (breathable planets) should be labelled "atmosphere".
 
 
+Rooms
+=====
+Rooms are discovered from Groups of blocks tagged with [ATMO] and followed by a room name in brackets:
+
+MyShip Group Name [ATMO] (Bridge)
+MyShip Group Name [ATMO] (Engineering)
+
+
 Doors
 =====
 Each should have two names in the CustomData defining the rooms on each side.

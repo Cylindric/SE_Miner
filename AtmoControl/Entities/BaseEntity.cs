@@ -6,9 +6,14 @@ namespace IngameScript
 {
     class BaseEntity
     {
+
+        protected MyIni Ini { get; }
+        public float EntityId { get; private set; }
+
         public BaseEntity(IMyFunctionalBlock block)
         {
             Ini = new MyIni();
+            EntityId = block.EntityId;
 
             MyIniParseResult result;
             if (!Ini.TryParse(block.CustomData, out result))
@@ -53,7 +58,5 @@ namespace IngameScript
                 return defaultValue;
             }
         }
-
-        protected MyIni Ini { get; }
     }
 }

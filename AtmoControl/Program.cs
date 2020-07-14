@@ -10,7 +10,7 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update10 | UpdateFrequency.Update100;
 
-            _rooms = new RoomController(this, Me.CubeGrid);
+            _rooms = new RoomController(this, Me);
             _rooms.Update();
         }
 
