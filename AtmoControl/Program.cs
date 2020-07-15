@@ -1,17 +1,21 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
+using System.Collections.Generic;
 
 namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
+        public const string TAG = "[ATMO]";
+
         private readonly RoomController _rooms;
+        private readonly Debug _debug;
 
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update10 | UpdateFrequency.Update100;
-
+            _debug = new Debug(this);
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
             _rooms = new RoomController(this, Me);
-            _rooms.Update();
         }
 
         public void Save()
@@ -20,7 +24,12 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            _rooms.Update(updateSource);
+            _rooms.Update(argument, updateSource);
+        }
+        
+        public void Debug(string str)
+        {
+            _debug.WriteLine(str);
         }
 
     }

@@ -1,29 +1,27 @@
-﻿using EmptyKeys.UserInterface.Generated.DataTemplatesContracts_Bindings;
-using Sandbox.ModAPI.Ingame;
-using SpaceEngineers.Game.ModAPI.Ingame;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 
 namespace IngameScript
 {
     class Room
     {
         private const string SAFE_ROOM = "atmosphere";
-        private const int SECONDS_BETWEEN_SCANS = 5;
         private const int SECONDS_BETWEEN_DISPLAY_UPDATES = 1;
 
-        private DateTime _lastBlockScan = DateTime.MinValue;
         private DateTime _lastDisplayUpdate = DateTime.MinValue;
+        private readonly Program _program;
 
-        public Room(string name)
+
+        public Room(Program program, string name)
         {
+            _program = program;
             Name = name;
             Vents = new List<Vent>();
             Doors = new List<Door>();
             Displays = new List<Display>();
             Sensors = new List<Sensor>();
+            Lights = new List<Light>();
         }
 
         // Vents report the atmosphere as being unpressurised,
@@ -60,25 +58,23 @@ namespace IngameScript
         /// </summary>
         private void UpdateSafetyIndicators()
         {
+            _program.Debug($"Updating safety indicators for room [{Name}]...");
             // Update all the signs that are door displays
-            foreach (var entity in Displays.Where(d => d.Mode == Display.DisplayType.DOOR_SIGN))
+            foreach (var display in Displays?.Where(d => d.Mode == Display.DisplayType.DOOR_SIGN))
             {
-                foreach (var vent in Vents.Where(x => x.Room1.Equals(entity.Room)))
-                {
-                    entity.UpdateSafety(vent.Safe);
-                }
+                _program.Debug($"  Checking display [{display}]...");
+                display.UpdateSafety(IsSafe());
             }
 
             // Update any lights that need turning on
-            foreach (var entity in Lights)
+            foreach (var light in Lights)
             {
-                foreach (var vent in Vents.Where(x => x.Room1.Equals(entity.Room)))
-                {
-                    entity.UpdateSafety(vent.Safe);
-                }
+                _program.Debug($"  Checking light [{light}]...");
+                light.UpdateSafety(IsSafe());
             }
-        }
 
+            _lastDisplayUpdate = DateTime.Now;
+        }
 
         public bool IsSafe()
         {

@@ -24,9 +24,8 @@ namespace IngameScript
             _block = block;
 
             UnsafeTitle = GetIniString("UnsafeMessage", "DANGER!");
-            Room = GetIniString("Room");
             FontSize = GetIniFloat("FontSize", 10f);
-            SafeTitle = GetIniString("SafeMessage", Room);
+            SafeTitle = GetIniString("SafeMessage", string.Empty);
 
             switch (GetIniString("Mode", "DoorSign"))
             {
@@ -86,12 +85,12 @@ namespace IngameScript
 
         public void SetUnsafe()
         {
-            SetDoorDisplay(UnsafeTitle, _unsafe_bg, _unsafe_fg);
+            SetDoorDisplay(UnsafeTitle ?? Room, _unsafe_bg, _unsafe_fg);
         }
 
         public void SetSafe()
         {
-            SetDoorDisplay(SafeTitle, _safe_bg, _safe_fg);
+            SetDoorDisplay(SafeTitle ?? Room, _safe_bg, _safe_fg);
         }
 
         public void UpdateRoomsDisplay(Dictionary<string, Room> rooms)

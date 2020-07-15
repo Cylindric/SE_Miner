@@ -4,13 +4,14 @@ namespace IngameScript
 {
     internal class Sensor : BaseEntity
     {
-        private IMySensorBlock _block;
+        private readonly IMySensorBlock _block;
+        public Door Door { get; set; }
 
         public Sensor(IMySensorBlock block) : base(block)
         {
             _block = block;
-            Link = GetIniString("Link");
-            Position = GetIniString("Position");
+            Orientation = GetIniString("Position");
+            Door = null;
             
             _block.DetectAsteroids = false;
             _block.DetectEnemy = false;
@@ -22,7 +23,7 @@ namespace IngameScript
             _block.DetectStations = false;
             _block.DetectSubgrids = false;
 
-            switch (Position)
+            switch (Orientation)
             {
                 case "Left":
                     _block.LeftExtend = 4.0f;
@@ -87,9 +88,7 @@ namespace IngameScript
             }
         }
 
-        public string Link { get; set; }
-
-        public string Position { get; set; }
+        public string Orientation { get; set; }
 
         public bool IsActive
         {
