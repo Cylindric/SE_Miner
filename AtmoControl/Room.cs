@@ -8,10 +8,10 @@ namespace IngameScript
     {
         private const string SAFE_ROOM = "atmosphere";
         private const int SECONDS_BETWEEN_DISPLAY_UPDATES = 1;
+        private const bool DEBUG_UPDATES = false;
 
         private DateTime _lastDisplayUpdate = DateTime.MinValue;
         private readonly Program _program;
-
 
         public Room(Program program, string name)
         {
@@ -45,6 +45,11 @@ namespace IngameScript
         public List<Light> Lights { get; internal set; }
         public bool AlwaysSafe { get; set; }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public void Update()
         {
             if ((DateTime.Now - _lastDisplayUpdate).TotalSeconds > SECONDS_BETWEEN_DISPLAY_UPDATES)
@@ -58,18 +63,26 @@ namespace IngameScript
         /// </summary>
         private void UpdateSafetyIndicators()
         {
-            _program.Debug($"Updating safety indicators for room [{Name}]...");
+            _program.Debug($"Updating safety indicators for room [{Name}]...", DEBUG_UPDATES);
+            
             // Update all the signs that are door displays
             foreach (var display in Displays?.Where(d => d.Mode == Display.DisplayType.DOOR_SIGN))
             {
-                _program.Debug($"  Checking display [{display}]...");
+                _program.Debug($"  Checking display [{display}]...", DEBUG_UPDATES);
                 display.UpdateSafety(IsSafe());
+            }
+
+            // Update all the signs that are detailed room displays
+            foreach (var display in Displays?.Where(d => d.Mode == Display.DisplayType.ROOM_SIGN))
+            {
+                _program.Debug($"  Checking display [{display}]...", DEBUG_UPDATES);
+                display.UpdateRoomDisplay();
             }
 
             // Update any lights that need turning on
             foreach (var light in Lights)
             {
-                _program.Debug($"  Checking light [{light}]...");
+                _program.Debug($"  Checking light [{light}]...", DEBUG_UPDATES);
                 light.UpdateSafety(IsSafe());
             }
 

@@ -9,8 +9,11 @@ namespace IngameScript
 {
     class RoomController
     {
-        private const int SECONDS_BETWEEN_REDISCOVERY = 60;
-        private const int MILLISECONDS_BETWEEN_SENSORSCANS= 1000;
+        private const int SECONDS_BETWEEN_REDISCOVERY = 10;
+        private const int MILLISECONDS_BETWEEN_SENSORSCANS= 200;
+        private const bool DEBUG_DOORS = false;
+        private const bool DEBUG_DOOR_DISCOVERY = false;
+        private const bool DEBUG_DISCOVERY = false;
 
         private readonly IMyTerminalBlock _me;
         private readonly IMyGridTerminalSystem _grid;
@@ -49,18 +52,20 @@ namespace IngameScript
                 // Create a new room
                 Room room = new Room(_program, name);
                 //room.Discover(blocks);
-                _program.Debug($"Added room [{name}]");
+                _program.Debug($"Added room [{name}]", DEBUG_DISCOVERY);
                 _rooms.Add(name, room);
             }
 
             // Now that we have a list of known rooms, attach the various entities to them
             // Add all the vents to the room
+            _program.Debug(new string('=', 25), DEBUG_DOOR_DISCOVERY);
             foreach (var group in groups)
             {
                 // Get the room name out of the group name
                 string name = RoomNameFromGroupName(group);
-                _program.Debug($"Looking for blocks in room [{name}]...");
-                
+                Room room = _rooms[name];
+
+                _program.Debug($"Looking for blocks in room [{room}]...", DEBUG_DISCOVERY || DEBUG_DOOR_DISCOVERY);
 
                 // We're only interested in blocks in the same grid as the script for now
                 // Sub-grid stuff gets tricky.
@@ -70,60 +75,80 @@ namespace IngameScript
                 // Add all the vents to the room
                 foreach (IMyAirVent vent in blocks.Where(x => x is IMyAirVent))
                 {
-                    _program.Debug($"  Found a vent [{vent.CustomName}].");
-                    _rooms[name].Vents.Add(new Vent(vent));
+                    _program.Debug($"  Found a vent [{vent.CustomName}].", DEBUG_DISCOVERY);
+                    room.Vents.Add(new Vent(vent) { Room = room });
                 }
 
                 // Add all the displays to the room
                 foreach (IMyTextPanel panel in blocks.Where(x => x is IMyTextPanel))
                 {
-                    _program.Debug($"  Found a display [{panel.CustomName}].");
-                    _rooms[name].Displays.Add(new Display(panel) { Room = name});
+                    _program.Debug($"  Found a display [{panel.CustomName}].", DEBUG_DISCOVERY);
+                    room.Displays.Add(new Display(panel) { Room = room});
                 }
 
                 // Add all the lights to the room
                 foreach (IMyLightingBlock light in blocks.Where(x => x is IMyLightingBlock))
                 {
-                    _program.Debug($"  Found a light [{light.CustomName}].");
-                    _rooms[name].Lights.Add(new Light(light));
+                    _program.Debug($"  Found a light [{light.CustomName}].", DEBUG_DISCOVERY);
+                    room.Lights.Add(new Light(light));
                 }
 
                 // Add all the sensors to the room
                 foreach (IMySensorBlock sensor in blocks.Where(x => x is IMySensorBlock))
                 {
-                    _program.Debug($"  Found a sensor [{sensor.CustomName}].");
-                    _rooms[name].Sensors.Add(new Sensor(sensor));
+                    _program.Debug($"  Found a sensor [{sensor.CustomName}].", DEBUG_DISCOVERY);
+                    room.Sensors.Add(new Sensor(sensor));
                 }
 
                 // Add all the doors to the rooms they are attached to
                 foreach (IMyDoor door in blocks.Where(x => x is IMyDoor))
                 {
-                    //_program.Debug($"Attemptying to add door [{door.CustomName}] to room [{name}]...");
+
+                    var number = door.EntityId.ToString("n0");
+                    var code =  number.Substring(number.Length - 3);
+                    _program.Debug($"  Found a door {door.CustomName} ({code})", DEBUG_DOOR_DISCOVERY);
 
                     // Doors might already exist in another room, in which case we
                     // don't want to create a duplicate
-                    Door new_door = null;
-                    foreach (var other_room in _rooms.Where(x => x.Key != name))
+                    Door found_door = null;
+                    _program.Debug($"    Rooms: {_rooms.Count}.", DEBUG_DOOR_DISCOVERY);
+                    foreach (var other_room in _rooms.Values)
                     {
-                        new_door = other_room.Value.Doors.FirstOrDefault(x => x.EntityId == door.EntityId);
-                        if (new_door != null)
+                        _program.Debug($"    Comparing room {other_room.Name} with {name}.", DEBUG_DOOR_DISCOVERY);
+                        if (other_room.Name == name)
                         {
-                            // door already exists, so add this new room as it's "second" room.
-                            new_door.Room2 = _rooms[name];
+                            _program.Debug($"    Skipping room {name} as it's the same room.", DEBUG_DOOR_DISCOVERY);
                         }
-                        break;
-                    }
-                    if (new_door == null)
-                    {
-                        _program.Debug($"  Found a door [{door.CustomName}].");
-
-                        new_door = new Door(door)
+                        else
                         {
-                            Room1 = _rooms[name]
+                            var found_doors = other_room.Doors.Where(x => x.EntityId == door.EntityId);
+                            _program.Debug($"    Found {found_doors.Count()} matching doors in {name}!");
+
+                            if (found_doors.Count() > 0)
+                            {
+                                // door already exists, so add this new room as it's "second" room.
+                                _program.Debug($"      Door is the same, update as new Room2");
+                                found_door = found_doors.First();
+                                found_door.Room2 = room;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (found_door == null)
+                    {
+                        // The door wasn't found anywhere else, so it's a new door
+                        _program.Debug($"    Adding as a new door.", DEBUG_DOOR_DISCOVERY);
+
+                        found_door = new Door(door)
+                        {
+                            Room1 = room
                         };
                     }
-                    _rooms[name].Doors.Add(new_door);
+
+                    room.Doors.Add(found_door);
                 }
+                _program.Debug(new string('-', 25), DEBUG_DOOR_DISCOVERY);
             }
 
             // Now that we have all the entities, attempt to link the sensors to their nearest door
@@ -144,7 +169,7 @@ namespace IngameScript
                         }
                     }
 
-                    _program.Debug($"Linked sensor [{sensor}] to door {closest_door}.");
+                    _program.Debug($"Linked sensor [{sensor}] to door {closest_door}.", DEBUG_DISCOVERY);
                     sensor.Door = closest_door;
                     closest_door.Sensor = sensor;
                 }
@@ -204,22 +229,22 @@ namespace IngameScript
                 // Doors can be triggered either by bad air, or by sensors
                 foreach (var door in room.Doors)
                 {
-                    //_program.Debug($"Checking {door.Name} in {room.Name}...");
+                    _program.Debug($"Checking {door.Name} in {room.Name}...", DEBUG_DOORS);
                     // If the door is not safe, check the sensors
                     var door_safe = door.IsSafe();
                     if (door_safe)
                     {
-                        //_program.Debug($"  door [{door}] is safe.");
+                        _program.Debug($"  door [{door}] is safe.", DEBUG_DOORS);
                         // Open and close based on any attached sensors
                         if (door.Sensor?.IsActive == true)
                         {
                             // Sensor is currently triggered, so open the door
-                            //_program.Debug($"    sensor [{door.Sensor}] is triggered!");
+                            _program.Debug($"    sensor [{door.Sensor}] is triggered!", DEBUG_DOORS);
                             door.Open();
                         }
-                        else
+                        else if(door.Sensor?.IsActive == false)
                         {
-                            //_program.Debug($"    sensor [{door.Sensor}] is not triggered.");
+                            _program.Debug($"    sensor [{door.Sensor}] is not triggered.", DEBUG_DOORS);
                             // Only auto-close the door if the mode requires it
                             if (door.Mode == Door.DoorMode.AUTO_CLOSE)
                             {
@@ -230,7 +255,7 @@ namespace IngameScript
                     }
                     else
                     {
-                        //_program.Debug($"  door [{door}] is not safe!");
+                        _program.Debug($"  door [{door}] is not safe!", DEBUG_DOORS);
                         // Door is not safe, so ignore sensors, but if it looks like it lost air, close it.
                         // This attempts to close the door once, but if someone manually opens it, it stays
                         // that way until they clear sensor range

@@ -3,69 +3,86 @@
 
 Does not work on planets, because I can't yet detect planetary atmosphere. Vents report them as unpressurised.
 
-Every device in the systme should have a tag [ATMO] in the name.
-Currently supported devices are Doors, Vents, Displays and Sensors.
-Any devices connected to permanent vaccuum (in space) should be labelled "space".
-Any devices connected to permanent atmoshpere (breathable planets) should be labelled "atmosphere".
+Most behaviour is determined by which rooms the various entities are assigned to (see "Rooms").
+Some entities also support various settings in the CustomData of their blocks.
 
 
 Rooms
-=====
-Rooms are discovered from Groups of blocks tagged with [ATMO] and followed by a room name in brackets:
+===============================================================================
+The central concept for the Atmospheric Control System (ACS) is a "Room".
+These are defined by creating Groups of blocks for each room.
+A room group should be named with a special tag to activate the ACS. By default this is "[ATMO]"
+The room group should also contain the name of the room in brackets.
+A special room name is "Atmosphere", which indicates anything which is "outside" in atmoshpere.
+
+For example:
 
 MyShip Group Name [ATMO] (Bridge)
 MyShip Group Name [ATMO] (Engineering)
 
 
 Doors
-=====
-Each should have two names in the CustomData defining the rooms on each side.
-The names of the rooms will be used to link all the components together,
-so every device referring to the same room, should have the same labels
+===============================================================================
+
+Doors should be part of BOTH rooms that they connect. This is so that the ACS
+can track the safety of both sides of the door.
+
+Custom Data
+-----------
 If Mode is "AutoClose" (the default) the door will close when not triggered.
 If Mode is "Open" the door will stay open and only close in an emergency.
 
+For example:
+
 [ATMO]
-ID = Hangar/Corridor
-Room1 = Hangar
-Room2 = Corridor A
 Mode = AutoClose
 
 
-Vents
-=====
-Each should have one name in the CustomData defining the room it pressurises.
+VENTS
+===============================================================================
+Every Room should have one or more events, as these are used to detect the 
+presence or absence of atmosphere in the room.
+There is no custom data for vents.
+
+
+DISPLAYS
+===============================================================================
+Displays can be placed near doors to indicate a room and it's status.
+
+Custom Data
+-----------
+SafeMessage - the text to display when the room is 'safe', default is the room name.
+UnsafeMessage - the text to display when the room is 'unsafe', default is the room name.
+FontSize - the size of the text in the sign, defaults to "10"
+
+For example:
 
 [ATMO]
-Room = Hangar
-
-Displays
-=========
-If Mode is "DoorSign" (the default), they should have one name in the CustomData defining the room it displays info for.
-If Mode is "RoomsDisplay", they will show the status of all rooms. Any rooms in IgnoreRooms will not be shown.
-
-[ATMO]
-Mode = DoorSign
-Room = Hangar
 SafeMessage = Safe
 UnsafeMessage = DANGER!
-IgnoreRooms = Space, Closet
 FontSize = 10
 
 
-Sensors
-=======
-Each should have a Link in the CustomData defining which door(s) it will trigger.
-All doors with the matching ID will be triggered.
+SENSORS
+===============================================================================
+Sensors are used to automatically open and close doors.
+The sensors are automatically linked to the nearest door to them in the room
+they are in.
 
-Position "Above Right" = when facing the door, one block right and one up.
-Position "Right" = when facing the door, one block right.
-Position "Left Front" = when facing the door, one block left and forward, perpendicular to the door
-Position "Custom" = whatever is provided by the Top, Bottom, Left, Right, Front and Back values
-Position "Manual" = just leave the sensor area where it is
+Custom Data
+-----------
+DetectNeutral - if "true" will trigger on Neutral players. Default is true.
+Position - used to help auto-configure the sensor-range, can be one of:
+	"Above Right": when facing the door, one block right and one up.
+	"Right": when facing the door, one block right.
+	"Left Front": when facing the door, one block left and forward, perpendicular to the door
+	"Custom": whatever is provided by the Top, Bottom, Left, Right, Front and Back values
+	"Manual": just leave the sensor area where it is
+Top, Bottom, Left, Right, Front, Back - the custom detection distances
+
+For example:
 
 [ATMO]
-Link = Hangar/Corridor
 Position = Above Right
 DetectNeutral = true
 Top = 3
@@ -75,13 +92,18 @@ Right = 3
 Front = 3
 Back = 3
 
-Lights
-======
-Each should have one name in the CustomData defining the room it belongs to.
 
-Mode "On/Off" turns the light on if UNSAFE and off if SAFE.
-Mode "Red/White" turns the light red if UNSAFE and white if SAFE.
+LIGHTS
+===============================================================================
+Lights can be used to indicate the status of a room with, either by turning a 
+light on and off, or changing the colour.
 
+Custom Data
+-----------
+Mode - determine the mode of operation. The default is "Red/White". Values are:
+	"On/Off": turns the light on if UNSAFE and off if SAFE.
+	"Red/White": turns the light red if UNSAFE and white if SAFE.
+
+For example:
 [ATMO]
 Mode = On/Off
-Room = Hangar

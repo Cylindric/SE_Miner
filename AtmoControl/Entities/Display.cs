@@ -1,13 +1,14 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using VRageMath;
 
 namespace IngameScript
 {
-    internal class Display : BaseEntity
+    internal class Display : BaseEntity<IMyTextPanel>
     {
-        private readonly IMyTextPanel _block;
         private Color _safe_bg = new Color(0, 40, 0);
         private Color _safe_fg = new Color(0, 140, 0);
         private Color _unsafe_bg = new Color(40, 0, 0);
@@ -16,21 +17,23 @@ namespace IngameScript
         public enum DisplayType
         {
             DOOR_SIGN,
-            ROOMS_SIGN
+            ROOMS_SIGN,
+            ROOM_SIGN
         }
 
         public Display(IMyTextPanel block) : base(block)
         {
-            _block = block;
-
-            UnsafeTitle = GetIniString("UnsafeMessage", "DANGER!");
+            UnsafeTitle = GetIniString("UnsafeMessage", string.Empty);
             FontSize = GetIniFloat("FontSize", 10f);
             SafeTitle = GetIniString("SafeMessage", string.Empty);
 
-            switch (GetIniString("Mode", "DoorSign"))
+            switch (GetIniString("Mode", "DoorSign").ToLower())
             {
-                case "RoomsDisplay":
+                case "roomsdisplay":
                     Mode = DisplayType.ROOMS_SIGN;
+                    break;
+                case "roomsign":
+                    Mode = DisplayType.ROOM_SIGN;
                     break;
                 default:
                     Mode = DisplayType.DOOR_SIGN;
@@ -51,6 +54,9 @@ namespace IngameScript
                 case DisplayType.ROOMS_SIGN:
                     _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
                     break;
+                case DisplayType.ROOM_SIGN:
+                    _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
+                    break;
                 case DisplayType.DOOR_SIGN:
                     _block.FontSize = FontSize;
                     _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.CENTER;
@@ -59,7 +65,7 @@ namespace IngameScript
             }
         }
 
-        public string Room { get; set; }
+        public Room Room { get; set; }
 
         public DisplayType Mode { get; set; }
 
@@ -85,12 +91,12 @@ namespace IngameScript
 
         public void SetUnsafe()
         {
-            SetDoorDisplay(UnsafeTitle ?? Room, _unsafe_bg, _unsafe_fg);
+            SetDoorDisplay(string.IsNullOrEmpty(UnsafeTitle) ? Room?.Name : UnsafeTitle, _unsafe_bg, _unsafe_fg);
         }
 
         public void SetSafe()
         {
-            SetDoorDisplay(SafeTitle ?? Room, _safe_bg, _safe_fg);
+            SetDoorDisplay(string.IsNullOrEmpty(SafeTitle) ? Room?.Name : SafeTitle, _safe_bg, _safe_fg);
         }
 
         public void UpdateRoomsDisplay(Dictionary<string, Room> rooms)
@@ -136,9 +142,48 @@ namespace IngameScript
             _block.WriteText(str);
         }
 
+        public void UpdateRoomDisplay()
+        {
+            var str = new StringBuilder();
+            str.AppendLine(Room.Name);
+            str.AppendLine(new string('=', Room.Name.Length));
+            str.AppendLine();
+            str.AppendLine($"Vents: {Room.Vents.Count}");
+            foreach(var vent in Room.Vents)
+            {
+                str.AppendLine($"  {vent}: {(vent.Safe ? "Safe" : "Unsafe")}");
+            }
+            str.AppendLine($"Doors: {Room.Doors.Count}");
+            foreach(var door in Room.Doors)
+            {
+                str.AppendLine($"  {door} ({door.EntityCode})");
+                str.AppendLine($"    Open:   {door.OpenRatio:P0} Open");
+                str.AppendLine($"    Status: {(door.IsSafe() ? "Safe" : "Unsafe")}");
+                str.AppendLine($"    Mode:   {door.Mode}");
+                str.AppendLine($"    Rooms:  1:{door.Room1}, 2:{door.Room2}");
+            }
+            str.AppendLine($"Sensors: {Room.Sensors.Count}");
+            foreach(var sensor in Room.Sensors)
+            {
+                str.AppendLine($"  {sensor} {(sensor.IsActive ? "Triggered": "")}");
+                str.AppendLine($"     Door: {sensor.Door}");
+            }
+
+            int onoffs = Room.Lights.Where(x => x.Mode == Light.LightMode.ON_OFF).Count();
+            int redwhites = Room.Lights.Where(x => x.Mode == Light.LightMode.WHITE_RED).Count();
+            str.AppendLine($"Lights: {onoffs} On/Off, {redwhites} Red/White");
+            str.Append("  ");
+            foreach (var light in Room.Lights)
+            {
+                str.Append(light.Status ? "+": ".");
+            }
+            str.AppendLine();
+            _block.WriteText(str);
+        }
+
         private void SetDoorDisplay(string str, Color bg, Color fg)
         {
-            _block.WriteText(str);
+            _block.WriteText(string.IsNullOrEmpty(str) ? "" : str);
             _block.BackgroundColor = bg;
             _block.FontColor = fg;
         }

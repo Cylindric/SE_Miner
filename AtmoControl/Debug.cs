@@ -8,7 +8,7 @@ namespace IngameScript
 {
     class Debug
     {
-        private const int LINES = 25;
+        private const int LINES = 30;
         private Program _prog;
         private string _tag;
         private List<IMyTextPanel> _debugDisplays;
@@ -24,13 +24,13 @@ namespace IngameScript
 
         public void Write(string msg)
         {
-            _prog.Echo(msg);
+            _prog.Echo(msg.Trim());
             if (!_enabled)
             {
                 return;
             }
 
-            _lines.Enqueue(msg);
+            _lines.Enqueue($"{DateTime.Now:m:s}: {msg}");
             while (_lines.Count > LINES)
             {
                 _lines.Dequeue();
@@ -50,7 +50,7 @@ namespace IngameScript
 
         public void WriteLine(string msg)
         {
-            Write($"{DateTime.Now:m:s}: {msg}\n");
+            Write($"{msg}\n");
         }
 
         private void FindAllPanels()

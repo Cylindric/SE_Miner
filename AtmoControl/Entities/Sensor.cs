@@ -2,14 +2,12 @@
 
 namespace IngameScript
 {
-    internal class Sensor : BaseEntity
+    internal class Sensor : BaseEntity<IMySensorBlock>
     {
-        private readonly IMySensorBlock _block;
         public Door Door { get; set; }
 
         public Sensor(IMySensorBlock block) : base(block)
         {
-            _block = block;
             Orientation = GetIniString("Position");
             Door = null;
             

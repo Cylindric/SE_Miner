@@ -5,16 +5,25 @@ using VRageMath;
 
 namespace IngameScript
 {
-    class BaseEntity
+    class BaseEntity<T> where T: IMyTerminalBlock
     {
-        private readonly IMyFunctionalBlock _block;
+        protected readonly T _block;
 
         protected MyIni Ini { get; }
-        public float EntityId
+        public long EntityId
         {
             get
             {
                 return _block.EntityId;
+            }
+        }
+
+        public string EntityCode
+        {
+            get
+            {
+                var number = _block.EntityId.ToString("n0");
+                return number.Substring(number.Length - 3);
             }
         }
 
@@ -34,14 +43,16 @@ namespace IngameScript
             }
         }
 
-        public BaseEntity(IMyFunctionalBlock block)
+        public BaseEntity(T block)
         {
             _block = block;
             Ini = new MyIni();
 
             MyIniParseResult result;
             if (!Ini.TryParse(block.CustomData, out result))
-                throw new Exception(result.ToString());
+            {
+                // No custom data found
+            }
         }
 
         public override string ToString()

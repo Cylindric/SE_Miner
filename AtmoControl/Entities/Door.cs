@@ -2,10 +2,8 @@
 
 namespace IngameScript
 {
-    class Door : BaseEntity
+    class Door : BaseEntity<IMyDoor>
     {
-        private readonly IMyDoor _block;
-
         public enum DoorMode
         {
             AUTO_CLOSE,
@@ -14,13 +12,12 @@ namespace IngameScript
 
         public Door(IMyDoor block) : base(block)
         {
-            _block = block;
             NeedsClosing = true;
             WasSafe = true;
 
-            switch (GetIniString("Mode", "AutoClose"))
+            switch (GetIniString("Mode", "AutoClose").ToLower())
             {
-                case "Open":
+                case "open":
                     Mode = DoorMode.NORMALLY_OPEN;
                     NeedsClosing = false;
                     break;
@@ -39,6 +36,14 @@ namespace IngameScript
         public bool NeedsClosing { get; set; }
         public bool WasSafe { get; set; }
         public Sensor Sensor { get; set; }
+
+        public float OpenRatio
+        {
+            get
+            {
+                return _block.OpenRatio;
+            }
+        }
 
         /// <summary>
         /// Returns true if both sides of the door are safe, otherwise returns false.

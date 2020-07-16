@@ -3,25 +3,22 @@
 
 namespace IngameScript
 {
-    class Vent : BaseEntity
+    class Vent : BaseEntity<IMyAirVent>
     {
         private const float SAFE_O2_THRESHOLD = 0.98f;
         private const string SAFE_ROOM = "atmosphere";
-        private IMyAirVent _block;
 
         public Vent(IMyAirVent block) : base(block)
         {
-            _block = block;
-            Room1 = GetIniString("Room");
         }
 
-        public string Room1 { get; set; }
+        public Room Room { get; set; }
 
         public float OxygenLevel
         {
             get
             {
-                return (Room1 == SAFE_ROOM ? 1.0f : _block.GetOxygenLevel());
+                return (Room.Name == SAFE_ROOM ? 1.0f : _block.GetOxygenLevel());
             }
         }
 
@@ -33,7 +30,7 @@ namespace IngameScript
         {
             get
             {
-                if (Room1 == SAFE_ROOM)
+                if (Room.Name == SAFE_ROOM)
                 {
                     return true;
                 }

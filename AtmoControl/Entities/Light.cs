@@ -3,12 +3,10 @@ using VRageMath;
 
 namespace IngameScript
 {
-    internal class Light : BaseEntity
+    internal class Light : BaseEntity<IMyLightingBlock>
     {
-        private IMyLightingBlock _block;
         private Color _safe_colour = new Color(255, 255, 255);
         private Color _unsafe_colour = new Color(255, 0, 0);
-
 
         public enum LightMode
         {
@@ -18,13 +16,10 @@ namespace IngameScript
 
         public Light(IMyLightingBlock block) : base(block)
         {
-            _block = block;
-            Room = GetIniString("Room");
-
-            switch (GetIniString("Mode", "On/Off"))
+            switch (GetIniString("Mode", "Red/White").ToLower())
             {
-                case "Red/White":
-                case "White/Red":
+                case "red/white":
+                case "white/red":
                     Mode = LightMode.WHITE_RED;
                     break;
                 default:
@@ -35,9 +30,9 @@ namespace IngameScript
             SetUnsafe();
         }
 
-        public string Room { get; set; }
-
         public LightMode Mode { get; set; }
+
+        public bool Status { get; private set; }
 
         public void UpdateSafety(bool isSafe)
         {
@@ -53,6 +48,7 @@ namespace IngameScript
 
         public void SetUnsafe()
         {
+            Status = true;
             switch (Mode)
             {
                 case LightMode.ON_OFF:
@@ -66,6 +62,7 @@ namespace IngameScript
 
         public void SetSafe()
         {
+            Status = false;
             switch (Mode)
             {
                 case LightMode.ON_OFF:

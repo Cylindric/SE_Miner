@@ -27,9 +27,12 @@ namespace IngameScript
             _rooms.Update(argument, updateSource);
         }
         
-        public void Debug(string str)
+        public void Debug(string str, bool show = true)
         {
-            _debug.WriteLine(str);
+            if (show)
+            {
+                _debug.WriteLine(str);
+            }
         }
 
     }
