@@ -82,7 +82,6 @@ namespace IngameScript
                 case "Manual":
                     // Just leave it as it is.
                     break;
-
             }
         }
 

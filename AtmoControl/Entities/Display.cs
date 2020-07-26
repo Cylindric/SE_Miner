@@ -1,8 +1,8 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
+using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
 namespace IngameScript
@@ -48,18 +48,18 @@ namespace IngameScript
             }
 
 
-            _block.ContentType = VRage.Game.GUI.TextPanel.ContentType.TEXT_AND_IMAGE;
+            _block.ContentType = ContentType.TEXT_AND_IMAGE;
             switch (Mode)
             {
                 case DisplayType.ROOMS_SIGN:
-                    _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
+                    _block.Alignment = TextAlignment.LEFT;
                     break;
                 case DisplayType.ROOM_SIGN:
-                    _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.LEFT;
+                    _block.Alignment = TextAlignment.LEFT;
                     break;
                 case DisplayType.DOOR_SIGN:
                     _block.FontSize = FontSize;
-                    _block.Alignment = VRage.Game.GUI.TextPanel.TextAlignment.CENTER;
+                    _block.Alignment = TextAlignment.CENTER;
                     SetUnsafe();
                     break;
             }

@@ -24,7 +24,7 @@ namespace IngameScript
 
         public void Write(string msg)
         {
-            _prog.Echo(msg.Trim());
+            _prog.Echo(msg.TrimEnd());
             if (!_enabled)
             {
                 return;

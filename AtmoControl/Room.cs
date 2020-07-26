@@ -45,6 +45,13 @@ namespace IngameScript
         public List<Light> Lights { get; internal set; }
         public bool AlwaysSafe { get; set; }
 
+        public bool IsEmpty{
+            get
+            {
+                return Vents.Count == 0 && Doors.Count == 0 && Displays.Count == 0 && Sensors.Count == 0 && Lights.Count == 0;
+            }
+        }
+
         public override string ToString()
         {
             return Name;

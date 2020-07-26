@@ -5,7 +5,7 @@ namespace IngameScript
 {
     class Vent : BaseEntity<IMyAirVent>
     {
-        private const float SAFE_O2_THRESHOLD = 0.98f;
+        private const float SAFE_O2_THRESHOLD = 0.90f;
         private const string SAFE_ROOM = "atmosphere";
 
         public Vent(IMyAirVent block) : base(block)
